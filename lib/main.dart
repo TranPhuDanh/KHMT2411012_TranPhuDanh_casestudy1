@@ -31,14 +31,14 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 3),
 
-// Widget tự vẽ icon cái ví kẹp tiền y chang mẫu
+              // Widget tự vẽ icon cái ví kẹp tiền y chang mẫu
               SizedBox(
                 width: 150,
                 height: 130,
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
-// Tiền màu xanh lá nhô lên phía sau
+                    // Tiền màu xanh lá nhô lên phía sau
                     Positioned(
                       top: 0,
                       child: Container(
@@ -61,7 +61,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-// Thân ví màu xanh dương bo tròn
+                    // Thân ví màu xanh dương bo tròn
                     Container(
                       width: 145,
                       height: 95,
@@ -70,7 +70,7 @@ class WelcomeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(22),
                       ),
                     ),
-// Nắp gập có khuy bấm bên phải
+                    // Nắp gập có khuy bấm bên phải
                     Positioned(
                       right: 0,
                       bottom: 24,
@@ -135,7 +135,7 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(flex: 4),
 
-              // Nút Bắt đầu
+              // Nút Bắt đầu -> Chuyển sang Dashboard
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -144,7 +144,7 @@ class WelcomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AddTransactionScreen(),
+                        builder: (context) => const DashboardScreen(),
                       ),
                     );
                   },
@@ -169,6 +169,734 @@ class WelcomeScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ==================== Màn hình Dashboard (Quản lý thu chi) ====================
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _currentBottomIndex = 0;
+  bool _isBalanceVisible = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF8FAFC),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Color(0xFF0F172A), size: 26),
+          onPressed: () {},
+        ),
+        title: const Text(
+          'Quản lý thu chi',
+          style: TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          // Icon chuông thông báo có badge đỏ
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Color(0xFF0F172A),
+                    size: 26,
+                  ),
+                  onPressed: () {},
+                ),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEF4444),
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '3',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thẻ Số dư hiện tại (Xanh dương)
+            _buildBalanceCard(),
+            const SizedBox(height: 16),
+
+            // Hàng Tổng thu nhập & Tổng chi tiêu
+            _buildIncomeExpenseRow(),
+            const SizedBox(height: 24),
+
+            // Tiêu đề Giao dịch gần đây + Xem tất cả
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Giao dịch gần đây',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: const Text(
+                    'Xem tất cả',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Danh sách các giao dịch gần đây
+            _buildTransactionList(),
+            const SizedBox(height: 80), // Chừa chỗ cho FAB
+          ],
+        ),
+      ),
+      // Nút Thêm giao dịch (+) tròn màu xanh nổi bật
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddTransactionScreen(),
+            ),
+          );
+        },
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, size: 30),
+      ),
+      // Thanh điều hướng đáy (Bottom Navigation Bar)
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentBottomIndex,
+          onTap: (index) => setState(() => _currentBottomIndex = index),
+          backgroundColor: Colors.white,
+          selectedItemColor: const Color(0xFF2563EB),
+          unselectedItemColor: const Color(0xFF64748B),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Trang chủ',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.article_outlined),
+              label: 'Giao dịch',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.pie_chart_outline_rounded),
+              label: 'Thống kê',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Thẻ số dư chính ---
+  Widget _buildBalanceCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D4ED8).withValues(alpha: 0.28),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'SỐ DƯ HIỆN TẠI',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isBalanceVisible = !_isBalanceVisible;
+                            });
+                          },
+                          child: Icon(
+                            _isBalanceVisible
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _isBalanceVisible ? '5.000.000 đ' : '•••••••• đ',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Hình minh họa ví tiền và tiền vàng
+              _buildWalletIllustration(),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Các chấm chỉ báo chuyển trang (Dots Indicator)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 18,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Hình ví tiền nhỏ bên trong thẻ số dư ---
+  Widget _buildWalletIllustration() {
+    return SizedBox(
+      width: 90,
+      height: 75,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.centerRight,
+        children: [
+          // Tờ tiền xanh nhô ra
+          Positioned(
+            top: 2,
+            right: 18,
+            child: Container(
+              width: 54,
+              height: 28,
+              decoration: BoxDecoration(
+                color: const Color(0xFF81C784),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFA5D6A7), width: 1.5),
+              ),
+              child: Center(
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF66BB6A),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Thân ví màu xanh dương
+          Positioned(
+            bottom: 0,
+            right: 4,
+            child: Container(
+              width: 74,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  // Nắp gập ví
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      width: 24,
+                      height: 22,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1D4ED8),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          bottomLeft: Radius.circular(8),
+                        ),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Đồng tiền vàng xếp phía trước ví
+          Positioned(
+            bottom: -2,
+            left: 2,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBBF24),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFD97706), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '\$',
+                      style: TextStyle(
+                        color: Color(0xFFB45309),
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                Transform.translate(
+                  offset: const Offset(-8, -2),
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFDE68A),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        '\$',
+                        style: TextStyle(
+                          color: Color(0xFFB45309),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Hàng Tổng thu nhập & Tổng chi tiêu ---
+  Widget _buildIncomeExpenseRow() {
+    return Row(
+      children: [
+        // Tổng thu nhập
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFDCFCE7)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF22C55E),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_downward_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TỔNG THU NHẬP',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        '8.000.000 đ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF16A34A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Tổng chi tiêu
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFFEE2E2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEF4444),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_upward_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TỔNG CHI TIÊU',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        '3.000.000 đ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFDC2626),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Khung chứa danh sách giao dịch gần đây ---
+  Widget _buildTransactionList() {
+    final transactions = [
+      {
+        'title': 'Ăn trưa',
+        'category': 'Ăn uống',
+        'date': '03/09/2024',
+        'amount': '-50.000 đ',
+        'isExpense': true,
+        'icon': Icons.restaurant,
+        'iconColor': const Color(0xFFFF7043),
+      },
+      {
+        'title': 'Xăng xe',
+        'category': 'Di chuyển',
+        'date': '03/09/2024',
+        'amount': '-100.000 đ',
+        'isExpense': true,
+        'icon': Icons.directions_car,
+        'iconColor': const Color(0xFF2196F3),
+      },
+      {
+        'title': 'Lương tháng 9',
+        'category': 'Thu nhập',
+        'date': '01/09/2024',
+        'amount': '+8.000.000 đ',
+        'isExpense': false,
+        'icon': Icons.attach_money,
+        'iconColor': const Color(0xFF22C55E),
+      },
+      {
+        'title': 'Mua sắm',
+        'category': 'Mua sắm',
+        'date': '31/08/2024',
+        'amount': '-300.000 đ',
+        'isExpense': true,
+        'icon': Icons.shopping_cart,
+        'iconColor': const Color(0xFFAB47BC),
+      },
+      {
+        'title': 'Học phí',
+        'category': 'Giáo dục',
+        'date': '30/08/2024',
+        'amount': '-500.000 đ',
+        'isExpense': true,
+        'icon': Icons.school,
+        'iconColor': const Color(0xFF00897B),
+      },
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: transactions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isLast = index == transactions.length - 1;
+
+          return Column(
+            children: [
+              InkWell(
+                onTap: () {
+                  // Nhấp vào giao dịch chuyển qua màn hình Sửa giao dịch
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditTransactionScreen(),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.vertical(
+                  top: index == 0 ? const Radius.circular(20) : Radius.zero,
+                  bottom: isLast ? const Radius.circular(20) : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      // Icon tròn danh mục
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: item['iconColor'] as Color,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          item['icon'] as IconData,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      // Tên và danh mục
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['title'] as String,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Text(
+                                  item['category'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  item['date'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Số tiền (+ / -)
+                      Text(
+                        item['amount'] as String,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: (item['isExpense'] as bool)
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFF22C55E),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!isLast)
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 72,
+                  endIndent: 16,
+                  color: Color(0xFFF1F5F9),
+                ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -217,7 +945,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
         centerTitle: true,
         actions: [
-          // Nút chuyển qua Sửa giao dịch
+          // Nút chuyển nhanh qua Sửa giao dịch
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: Color(0xFF1565C0)),
             tooltip: 'Sửa giao dịch',
@@ -511,7 +1239,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       height: 52,
       child: ElevatedButton(
         onPressed: () {
-          // Xử lý lưu giao dịch
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Đã lưu giao dịch!')),
           );
@@ -866,7 +1593,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       height: 52,
       child: ElevatedButton(
         onPressed: () {
-          // Xử lý lưu giao dịch đã sửa
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Đã cập nhật giao dịch!')),
           );
