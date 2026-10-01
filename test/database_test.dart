@@ -185,5 +185,16 @@ void main() {
       expect(balance, (income - expense));
       expect(stats, isA<Map<String, double>>());
     });
+
+    test('Load 5 giao dịch gần đây lên Dashboard đúng thứ tự và giới hạn', () async {
+      final dbHelper = DatabaseHelper.instance;
+      final recents = await dbHelper.getRecentTransactions(limit: 5);
+
+      expect(recents.length, 5);
+      // Kiểm tra danh sách được sắp xếp giảm dần theo ID (mới nhất lên đầu)
+      for (int i = 0; i < recents.length - 1; i++) {
+        expect(recents[i].id! >= recents[i + 1].id!, true);
+      }
+    });
   });
 }

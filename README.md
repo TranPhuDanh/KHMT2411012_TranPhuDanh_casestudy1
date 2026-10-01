@@ -17,15 +17,17 @@
 | **Buổi 3** | `buoi3` | Xây dựng giao diện **Màn hình Thêm giao dịch (`AddTransactionScreen`)** và **Màn hình Sửa giao dịch (`EditTransactionScreen`)**. |
 | **Buổi 4** | `buoi4` | Xây dựng **Màn hình Dashboard Quản lý thu chi (`DashboardScreen`)** và liên kết điều hướng hoàn chỉnh giữa các màn hình. |
 | **Buổi 5** | `buoi5` | **Thiết kế và xây dựng cơ sở dữ liệu SQLite cho ứng dụng**: Mô hình hóa CSDL quan hệ (`categories`, `transactions`), xây dựng Singleton `DatabaseHelper`, thực hiện trọn vẹn CRUD, tính toán thống kê tự động và đồng bộ trực tiếp với giao diện. |
+| **Buổi 6** | `buoi6` | **Hoàn thiện các màn hình thêm, sửa và load thông tin giao dịch lên màn hình Dashboard**: Đổ dữ liệu động từ SQLite lên thẻ số dư, tóm tắt thu/chi và 5 giao dịch gần đây; hoàn thiện luồng Thêm/Sửa/Xóa giao dịch (có xác nhận); thêm tính năng tìm kiếm, bộ lọc danh mục và xóa vuốt (`Dismissible`). |
 
 ---
 
-## 💾 Kiến trúc Cơ sở dữ liệu SQLite (Buổi 5)
+## 📄 Tài liệu chi tiết các buổi học
+- 👉 **[Tài liệu Thiết kế Cơ sở dữ liệu SQLite Buổi 5 (DATABASE_DESIGN.md)](DATABASE_DESIGN.md)**
+- 👉 **[Báo cáo Hoàn thiện Màn hình Thêm, Sửa & Dashboard Buổi 6 (BUOI6_REPORT.md)](BUOI6_REPORT.md)**
 
-Chi tiết thiết kế, sơ đồ ERD và các câu lệnh SQL được tài liệu hóa đầy đủ tại:  
-👉 **[TÀI LIỆU THIẾT KẾ CƠ SỞ DỮ LIỆU SQLITE (DATABASE_DESIGN.md)](DATABASE_DESIGN.md)**
+---
 
-### Cấu trúc các bảng:
+## 💾 Kiến trúc Cơ sở dữ liệu SQLite
 - **`categories`**: Quản lý danh mục thu / chi (Ăn uống, Di chuyển, Mua sắm, Giải trí, Giáo dục, Lương, Thưởng,...).
 - **`transactions`**: Quản lý các giao dịch thu chi cá nhân (Tiêu đề, Số tiền, Danh mục, Khóa ngoại `category_id`, Ngày, Loại thu/chi, Ghi chú).
 
@@ -48,4 +50,4 @@ flutter test
 # Kiểm tra phân tích cú pháp tĩnh
 flutter analyze
 ```
-- Kết quả: **`All tests passed!` (8/8 tests pass, 0 issues)**.
+- Kết quả: **`All tests passed!` (12/12 tests pass, 0 issues)**.

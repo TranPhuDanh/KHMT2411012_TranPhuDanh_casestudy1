@@ -5,7 +5,7 @@ import '../models/transaction_model.dart';
 
 class DatabaseHelper {
   static const String _dbName = 'expense_manager.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   // Bảng Danh mục (Categories)
   static const String tableCategories = 'categories';
@@ -134,44 +134,14 @@ class DatabaseHelper {
   Future<void> _insertSampleTransactions(Database db) async {
     final sampleItems = [
       {
-        colTitle: 'Ăn trưa',
-        colCategory: 'Ăn uống',
-        colCategoryId: 1,
-        colDate: '03/09/2024',
-        colAmount: 50000.0,
+        colTitle: 'Tiền thuê nhà',
+        colCategory: 'Khác',
+        colCategoryId: 6,
+        colDate: '25/08/2024',
+        colAmount: 2050000.0,
         colIsExpense: 1,
-        colNote: 'Ăn trưa cùng đồng nghiệp',
-        colCreatedAt: DateTime.now().toIso8601String(),
-      },
-      {
-        colTitle: 'Xăng xe',
-        colCategory: 'Di chuyển',
-        colCategoryId: 2,
-        colDate: '03/09/2024',
-        colAmount: 100000.0,
-        colIsExpense: 1,
-        colNote: 'Đổ xăng xe máy',
-        colCreatedAt: DateTime.now().toIso8601String(),
-      },
-      {
-        colTitle: 'Lương tháng 9',
-        colCategory: 'Thu nhập',
-        colCategoryId: 7,
-        colDate: '01/09/2024',
-        colAmount: 8000000.0,
-        colIsExpense: 0,
-        colNote: 'Lương chuyển khoản tháng 9',
-        colCreatedAt: DateTime.now().toIso8601String(),
-      },
-      {
-        colTitle: 'Mua sắm',
-        colCategory: 'Mua sắm',
-        colCategoryId: 3,
-        colDate: '31/08/2024',
-        colAmount: 300000.0,
-        colIsExpense: 1,
-        colNote: 'Mua đồ dùng cá nhân',
-        colCreatedAt: DateTime.now().toIso8601String(),
+        colNote: 'Tiền phòng trọ tháng 8',
+        colCreatedAt: '2024-08-25T10:00:00.000',
       },
       {
         colTitle: 'Học phí',
@@ -181,7 +151,47 @@ class DatabaseHelper {
         colAmount: 500000.0,
         colIsExpense: 1,
         colNote: 'Đóng học phí khóa học Flutter',
-        colCreatedAt: DateTime.now().toIso8601String(),
+        colCreatedAt: '2024-08-30T10:00:00.000',
+      },
+      {
+        colTitle: 'Mua sắm',
+        colCategory: 'Mua sắm',
+        colCategoryId: 3,
+        colDate: '31/08/2024',
+        colAmount: 300000.0,
+        colIsExpense: 1,
+        colNote: 'Mua đồ dùng cá nhân',
+        colCreatedAt: '2024-08-31T10:00:00.000',
+      },
+      {
+        colTitle: 'Lương tháng 9',
+        colCategory: 'Thu nhập',
+        colCategoryId: 7,
+        colDate: '01/09/2024',
+        colAmount: 8000000.0,
+        colIsExpense: 0,
+        colNote: 'Lương chuyển khoản tháng 9',
+        colCreatedAt: '2024-09-01T10:00:00.000',
+      },
+      {
+        colTitle: 'Xăng xe',
+        colCategory: 'Di chuyển',
+        colCategoryId: 2,
+        colDate: '03/09/2024',
+        colAmount: 100000.0,
+        colIsExpense: 1,
+        colNote: 'Đổ xăng xe máy',
+        colCreatedAt: '2024-09-03T09:00:00.000',
+      },
+      {
+        colTitle: 'Ăn trưa',
+        colCategory: 'Ăn uống',
+        colCategoryId: 1,
+        colDate: '03/09/2024',
+        colAmount: 50000.0,
+        colIsExpense: 1,
+        colNote: 'Ăn trưa cùng đồng nghiệp',
+        colCreatedAt: '2024-09-03T12:00:00.000',
       },
     ];
 

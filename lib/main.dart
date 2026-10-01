@@ -195,6 +195,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentBottomIndex = 0;
   bool _isBalanceVisible = true;
   bool _isLoading = true;
+  String _searchQuery = '';
+  int _filterType = 0; // 0: Tất cả, 1: Chi tiêu, 2: Thu nhập
 
   double _balance = 0.0;
   double _totalIncome = 0.0;
@@ -490,14 +492,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Tab 1: Toàn bộ danh sách giao dịch
   Widget _buildAllTransactionsView() {
+    final filtered = _allTransactions.where((tx) {
+      if (_filterType == 1 && !tx.isExpense) return false;
+      if (_filterType == 2 && tx.isExpense) return false;
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        final matchTitle = tx.title.toLowerCase().contains(query);
+        final matchCat = tx.category.toLowerCase().contains(query);
+        final matchNote = tx.note.toLowerCase().contains(query);
+        if (!matchTitle && !matchCat && !matchNote) return false;
+      }
+      return true;
+    }).toList();
+
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ô tìm kiếm giao dịch
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: TextField(
+              onChanged: (val) => setState(() => _searchQuery = val),
+              decoration: const InputDecoration(
+                hintText: 'Tìm kiếm giao dịch (tiêu đề, danh mục)...',
+                hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+                prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Các nút lọc nhanh (Filter Chips)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('Tất cả (${_allTransactions.length})', 0),
+                const SizedBox(width: 8),
+                _buildFilterChip('Chi tiêu (${_allTransactions.where((t) => t.isExpense).length})', 1),
+                const SizedBox(width: 8),
+                _buildFilterChip('Thu nhập (${_allTransactions.where((t) => !t.isExpense).length})', 2),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           Text(
-            'Tổng cộng ${_allTransactions.length} giao dịch trong SQLite',
+            'Tìm thấy ${filtered.length} giao dịch trong SQLite',
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF64748B),
@@ -505,9 +555,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildTransactionList(_allTransactions),
+          _buildTransactionList(filtered),
           const SizedBox(height: 80),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, int type) {
+    final isSelected = _filterType == type;
+    return GestureDetector(
+      onTap: () => setState(() => _filterType = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
+          ),
+        ),
       ),
     );
   }
@@ -2114,29 +2189,58 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     );
   }
 
-  // --- Nút Lưu ---
+  // --- Nút Lưu và Xóa ---
   Widget _buildSaveButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: _updateTransaction,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1565C0),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: _updateTransaction,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1565C0),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text(
+              'Lưu thay đổi',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
-        child: const Text(
-          'Lưu thay đổi',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+        if (widget.transaction?.id != null) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: _deleteTransaction,
+              icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+              label: const Text(
+                'Xóa giao dịch',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFEF4444),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        ],
+      ],
     );
   }
 }
