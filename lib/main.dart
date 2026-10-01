@@ -183,6 +183,58 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
+// ==================== Hàm tiện ích Danh mục ====================
+IconData getCategoryIcon(String category) {
+  switch (category) {
+    case 'Ăn uống':
+      return Icons.restaurant;
+    case 'Di chuyển':
+      return Icons.directions_car;
+    case 'Mua sắm':
+      return Icons.shopping_bag;
+    case 'Giải trí':
+      return Icons.movie;
+    case 'Giáo dục':
+    case 'Học phí':
+      return Icons.school;
+    case 'Thu nhập':
+      return Icons.attach_money;
+    case 'Lương':
+      return Icons.payments_outlined;
+    case 'Thưởng':
+      return Icons.card_giftcard;
+    case 'Đầu tư':
+      return Icons.trending_up;
+    default:
+      return Icons.account_balance_wallet;
+  }
+}
+
+Color getCategoryColor(String category) {
+  switch (category) {
+    case 'Ăn uống':
+      return const Color(0xFFFF7043);
+    case 'Di chuyển':
+      return const Color(0xFF2196F3);
+    case 'Mua sắm':
+      return const Color(0xFFAB47BC);
+    case 'Giải trí':
+      return const Color(0xFFE91E63);
+    case 'Giáo dục':
+    case 'Học phí':
+      return const Color(0xFF00897B);
+    case 'Thu nhập':
+    case 'Lương':
+      return const Color(0xFF22C55E);
+    case 'Thưởng':
+      return const Color(0xFFF59E0B);
+    case 'Đầu tư':
+      return const Color(0xFF06B6D4);
+    default:
+      return const Color(0xFF64748B);
+  }
+}
+
 // ==================== Màn hình Dashboard (Quản lý thu chi) ====================
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -252,47 +304,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '${isNegative ? '-' : ''}${buffer.toString()} đ';
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Ăn uống':
-        return Icons.restaurant;
-      case 'Di chuyển':
-        return Icons.directions_car;
-      case 'Mua sắm':
-        return Icons.shopping_bag;
-      case 'Giải trí':
-        return Icons.movie;
-      case 'Giáo dục':
-      case 'Học phí':
-        return Icons.school;
-      case 'Thu nhập':
-      case 'Lương':
-        return Icons.attach_money;
-      default:
-        return Icons.account_balance_wallet;
-    }
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Ăn uống':
-        return const Color(0xFFFF7043);
-      case 'Di chuyển':
-        return const Color(0xFF2196F3);
-      case 'Mua sắm':
-        return const Color(0xFFAB47BC);
-      case 'Giải trí':
-        return const Color(0xFFE91E63);
-      case 'Giáo dục':
-      case 'Học phí':
-        return const Color(0xFF00897B);
-      case 'Thu nhập':
-      case 'Lương':
-        return const Color(0xFF22C55E);
-      default:
-        return const Color(0xFF64748B);
-    }
-  }
+  IconData _getCategoryIcon(String category) => getCategoryIcon(category);
+  Color _getCategoryColor(String category) => getCategoryColor(category);
 
   @override
   Widget build(BuildContext context) {
@@ -1549,18 +1562,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final expenseCategories = ['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Khác'];
     final incomeCategories = ['Thu nhập', 'Lương', 'Thưởng', 'Đầu tư', 'Khác'];
     final categories = isExpense ? expenseCategories : incomeCategories;
-    final categoryIcons = {
-      'Ăn uống': Icons.restaurant,
-      'Di chuyển': Icons.directions_car,
-      'Mua sắm': Icons.shopping_bag,
-      'Giải trí': Icons.movie,
-      'Giáo dục': Icons.school,
-      'Thu nhập': Icons.attach_money,
-      'Lương': Icons.payments_outlined,
-      'Thưởng': Icons.card_giftcard,
-      'Đầu tư': Icons.trending_up,
-      'Khác': Icons.more_horiz,
-    };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -1575,6 +1576,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF94A3B8)),
           items: categories.map((category) {
+            final catColor = getCategoryColor(category);
+            final catIcon = getCategoryIcon(category);
             return DropdownMenuItem(
               value: category,
               child: Row(
@@ -1583,12 +1586,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF7043).withValues(alpha: 0.15),
+                      color: catColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      categoryIcons[category] ?? Icons.more_horiz,
-                      color: const Color(0xFFFF7043),
+                      catIcon,
+                      color: catColor,
                       size: 20,
                     ),
                   ),
@@ -2041,18 +2044,6 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final expenseCategories = ['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Khác'];
     final incomeCategories = ['Thu nhập', 'Lương', 'Thưởng', 'Đầu tư', 'Khác'];
     final categories = isExpense ? expenseCategories : incomeCategories;
-    final categoryIcons = {
-      'Ăn uống': Icons.restaurant,
-      'Di chuyển': Icons.directions_car,
-      'Mua sắm': Icons.shopping_bag,
-      'Giải trí': Icons.movie,
-      'Giáo dục': Icons.school,
-      'Thu nhập': Icons.attach_money,
-      'Lương': Icons.payments_outlined,
-      'Thưởng': Icons.card_giftcard,
-      'Đầu tư': Icons.trending_up,
-      'Khác': Icons.more_horiz,
-    };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -2067,6 +2058,8 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF94A3B8)),
           items: categories.map((category) {
+            final catColor = getCategoryColor(category);
+            final catIcon = getCategoryIcon(category);
             return DropdownMenuItem(
               value: category,
               child: Row(
@@ -2075,12 +2068,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF7043).withValues(alpha: 0.15),
+                      color: catColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      categoryIcons[category] ?? Icons.more_horiz,
-                      color: const Color(0xFFFF7043),
+                      catIcon,
+                      color: catColor,
                       size: 20,
                     ),
                   ),

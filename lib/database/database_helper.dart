@@ -68,6 +68,15 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE $tableTransactions ADD COLUMN $colCategoryId INTEGER');
       } catch (_) {}
     }
+    if (oldVersion < 3) {
+      final count = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM $tableTransactions'),
+      ) ?? 0;
+      if (count <= 5) {
+        await db.delete(tableTransactions);
+        await _insertSampleTransactions(db);
+      }
+    }
   }
 
   // Bật hỗ trợ Foreign Key trong SQLite
