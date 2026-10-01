@@ -1311,6 +1311,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Color(0xFF1565C0)),
+            tooltip: 'Sửa giao dịch',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditTransactionScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -1384,7 +1398,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => isExpense = true),
+              onTap: () => setState(() {
+                isExpense = true;
+                if (!['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Khác'].contains(selectedCategory)) {
+                  selectedCategory = 'Ăn uống';
+                }
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -1407,7 +1426,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => isExpense = false),
+              onTap: () => setState(() {
+                isExpense = false;
+                if (!['Thu nhập', 'Lương', 'Thưởng', 'Đầu tư', 'Khác'].contains(selectedCategory)) {
+                  selectedCategory = 'Thu nhập';
+                }
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -1447,7 +1471,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   // --- Dropdown danh mục ---
   Widget _buildCategoryDropdown() {
-    final categories = ['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Thu nhập', 'Khác'];
+    final expenseCategories = ['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Khác'];
+    final incomeCategories = ['Thu nhập', 'Lương', 'Thưởng', 'Đầu tư', 'Khác'];
+    final categories = isExpense ? expenseCategories : incomeCategories;
     final categoryIcons = {
       'Ăn uống': Icons.restaurant,
       'Di chuyển': Icons.directions_car,
@@ -1455,6 +1481,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       'Giải trí': Icons.movie,
       'Giáo dục': Icons.school,
       'Thu nhập': Icons.attach_money,
+      'Lương': Icons.payments_outlined,
+      'Thưởng': Icons.card_giftcard,
+      'Đầu tư': Icons.trending_up,
       'Khác': Icons.more_horiz,
     };
 
@@ -1861,7 +1890,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => isExpense = true),
+              onTap: () => setState(() {
+                isExpense = true;
+                if (!['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Khác'].contains(selectedCategory)) {
+                  selectedCategory = 'Ăn uống';
+                }
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -1884,7 +1918,12 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => isExpense = false),
+              onTap: () => setState(() {
+                isExpense = false;
+                if (!['Thu nhập', 'Lương', 'Thưởng', 'Đầu tư', 'Khác'].contains(selectedCategory)) {
+                  selectedCategory = 'Thu nhập';
+                }
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -1924,7 +1963,9 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
   // --- Dropdown danh mục ---
   Widget _buildCategoryDropdown() {
-    final categories = ['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Thu nhập', 'Khác'];
+    final expenseCategories = ['Ăn uống', 'Di chuyển', 'Mua sắm', 'Giải trí', 'Giáo dục', 'Khác'];
+    final incomeCategories = ['Thu nhập', 'Lương', 'Thưởng', 'Đầu tư', 'Khác'];
+    final categories = isExpense ? expenseCategories : incomeCategories;
     final categoryIcons = {
       'Ăn uống': Icons.restaurant,
       'Di chuyển': Icons.directions_car,
@@ -1932,6 +1973,9 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       'Giải trí': Icons.movie,
       'Giáo dục': Icons.school,
       'Thu nhập': Icons.attach_money,
+      'Lương': Icons.payments_outlined,
+      'Thưởng': Icons.card_giftcard,
+      'Đầu tư': Icons.trending_up,
       'Khác': Icons.more_horiz,
     };
 

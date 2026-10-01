@@ -3,6 +3,7 @@ class TransactionModel {
   final String title;
   final double amount;
   final String category;
+  final int? categoryId;
   final String date;
   final bool isExpense;
   final String note;
@@ -13,6 +14,7 @@ class TransactionModel {
     required this.title,
     required this.amount,
     required this.category,
+    this.categoryId,
     required this.date,
     required this.isExpense,
     this.note = '',
@@ -25,6 +27,7 @@ class TransactionModel {
       'title': title,
       'amount': amount,
       'category': category,
+      'category_id': categoryId,
       'date': date,
       'is_expense': isExpense ? 1 : 0,
       'note': note,
@@ -43,6 +46,7 @@ class TransactionModel {
       title: map['title'] as String? ?? '',
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       category: map['category'] as String? ?? 'Khác',
+      categoryId: map['category_id'] as int?,
       date: map['date'] as String? ?? '',
       isExpense: (map['is_expense'] as int? ?? 1) == 1,
       note: map['note'] as String? ?? '',
@@ -56,6 +60,7 @@ class TransactionModel {
     String? title,
     double? amount,
     String? category,
+    int? categoryId,
     String? date,
     bool? isExpense,
     String? note,
@@ -66,6 +71,7 @@ class TransactionModel {
       title: title ?? this.title,
       amount: amount ?? this.amount,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       date: date ?? this.date,
       isExpense: isExpense ?? this.isExpense,
       note: note ?? this.note,

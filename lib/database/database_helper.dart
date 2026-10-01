@@ -1,17 +1,26 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 
 class DatabaseHelper {
   static const String _dbName = 'expense_manager.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
-  // Tên bảng và các cột
-  static const String tableName = 'transactions';
+  // Bảng Danh mục (Categories)
+  static const String tableCategories = 'categories';
+  static const String colCatId = 'id';
+  static const String colCatName = 'name';
+  static const String colCatIcon = 'icon';
+  static const String colCatIsExpense = 'is_expense';
+
+  // Bảng Giao dịch (Transactions)
+  static const String tableTransactions = 'transactions';
   static const String colId = 'id';
   static const String colTitle = 'title';
   static const String colAmount = 'amount';
   static const String colCategory = 'category';
+  static const String colCategoryId = 'category_id';
   static const String colDate = 'date';
   static const String colIsExpense = 'is_expense';
   static const String colNote = 'note';
@@ -37,34 +46,97 @@ class DatabaseHelper {
       path,
       version: _dbVersion,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
+      onConfigure: _onConfigure,
     );
   }
 
-  // Khởi tạo bảng dữ liệu SQLite
+  // Nâng cấp database khi có thay đổi cấu trúc bảng
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableCategories (
+          $colCatId INTEGER PRIMARY KEY AUTOINCREMENT,
+          $colCatName TEXT NOT NULL UNIQUE,
+          $colCatIcon TEXT NOT NULL,
+          $colCatIsExpense INTEGER NOT NULL
+        )
+      ''');
+      await _insertSampleCategories(db);
+
+      try {
+        await db.execute('ALTER TABLE $tableTransactions ADD COLUMN $colCategoryId INTEGER');
+      } catch (_) {}
+    }
+  }
+
+  // Bật hỗ trợ Foreign Key trong SQLite
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  // Khởi tạo các bảng trong Database
   Future<void> _createDB(Database db, int version) async {
+    // 1. Tạo bảng Danh mục (Categories)
     await db.execute('''
-      CREATE TABLE $tableName (
+      CREATE TABLE $tableCategories (
+        $colCatId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $colCatName TEXT NOT NULL UNIQUE,
+        $colCatIcon TEXT NOT NULL,
+        $colCatIsExpense INTEGER NOT NULL
+      )
+    ''');
+
+    // 2. Tạo bảng Giao dịch (Transactions) có liên kết Khóa ngoại Foreign Key tới Categories
+    await db.execute('''
+      CREATE TABLE $tableTransactions (
         $colId INTEGER PRIMARY KEY AUTOINCREMENT,
         $colTitle TEXT NOT NULL,
         $colAmount REAL NOT NULL,
         $colCategory TEXT NOT NULL,
+        $colCategoryId INTEGER,
         $colDate TEXT NOT NULL,
         $colIsExpense INTEGER NOT NULL,
         $colNote TEXT,
-        $colCreatedAt TEXT
+        $colCreatedAt TEXT,
+        FOREIGN KEY ($colCategoryId) REFERENCES $tableCategories ($colCatId) ON DELETE SET NULL
       )
     ''');
 
-    // Chèn dữ liệu mẫu ban đầu để app hiển thị đầy đủ ngay lần đầu chạy
-    await _insertSampleData(db);
+    // 3. Khởi tạo dữ liệu mẫu ban đầu
+    await _insertSampleCategories(db);
+    await _insertSampleTransactions(db);
   }
 
-  // Dữ liệu mẫu ban đầu tương thích với giao diện
-  Future<void> _insertSampleData(Database db) async {
+  // Chèn danh mục mặc định
+  Future<void> _insertSampleCategories(Database db) async {
+    final defaultCategories = [
+      // Chi tiêu
+      {'name': 'Ăn uống', 'icon': 'restaurant', 'is_expense': 1},
+      {'name': 'Di chuyển', 'icon': 'directions_car', 'is_expense': 1},
+      {'name': 'Mua sắm', 'icon': 'shopping_bag', 'is_expense': 1},
+      {'name': 'Giải trí', 'icon': 'movie', 'is_expense': 1},
+      {'name': 'Giáo dục', 'icon': 'school', 'is_expense': 1},
+      {'name': 'Khác', 'icon': 'more_horiz', 'is_expense': 1},
+      // Thu nhập
+      {'name': 'Thu nhập', 'icon': 'attach_money', 'is_expense': 0},
+      {'name': 'Lương', 'icon': 'payments', 'is_expense': 0},
+      {'name': 'Thưởng', 'icon': 'card_giftcard', 'is_expense': 0},
+      {'name': 'Đầu tư', 'icon': 'trending_up', 'is_expense': 0},
+    ];
+
+    for (final cat in defaultCategories) {
+      await db.insert(tableCategories, cat);
+    }
+  }
+
+  // Chèn dữ liệu mẫu cho giao dịch
+  Future<void> _insertSampleTransactions(Database db) async {
     final sampleItems = [
       {
         colTitle: 'Ăn trưa',
         colCategory: 'Ăn uống',
+        colCategoryId: 1,
         colDate: '03/09/2024',
         colAmount: 50000.0,
         colIsExpense: 1,
@@ -74,6 +146,7 @@ class DatabaseHelper {
       {
         colTitle: 'Xăng xe',
         colCategory: 'Di chuyển',
+        colCategoryId: 2,
         colDate: '03/09/2024',
         colAmount: 100000.0,
         colIsExpense: 1,
@@ -83,6 +156,7 @@ class DatabaseHelper {
       {
         colTitle: 'Lương tháng 9',
         colCategory: 'Thu nhập',
+        colCategoryId: 7,
         colDate: '01/09/2024',
         colAmount: 8000000.0,
         colIsExpense: 0,
@@ -92,6 +166,7 @@ class DatabaseHelper {
       {
         colTitle: 'Mua sắm',
         colCategory: 'Mua sắm',
+        colCategoryId: 3,
         colDate: '31/08/2024',
         colAmount: 300000.0,
         colIsExpense: 1,
@@ -101,6 +176,7 @@ class DatabaseHelper {
       {
         colTitle: 'Học phí',
         colCategory: 'Giáo dục',
+        colCategoryId: 5,
         colDate: '30/08/2024',
         colAmount: 500000.0,
         colIsExpense: 1,
@@ -110,22 +186,50 @@ class DatabaseHelper {
     ];
 
     for (final item in sampleItems) {
-      await db.insert(tableName, item);
+      await db.insert(tableTransactions, item);
     }
   }
 
-  // ==================== CÁC PHƯƠNG THỨC CRUD ====================
+  // ==================== CÁC PHƯƠNG THỨC CRUD CHO DANH MỤC (CATEGORIES) ====================
+
+  Future<int> insertCategory(CategoryModel category) async {
+    final db = await instance.database;
+    return await db.insert(
+      tableCategories,
+      category.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<CategoryModel>> getAllCategories() async {
+    final db = await instance.database;
+    final result = await db.query(tableCategories, orderBy: '$colCatId ASC');
+    return result.map((json) => CategoryModel.fromMap(json)).toList();
+  }
+
+  Future<List<CategoryModel>> getCategoriesByType({required bool isExpense}) async {
+    final db = await instance.database;
+    final result = await db.query(
+      tableCategories,
+      where: '$colCatIsExpense = ?',
+      whereArgs: [isExpense ? 1 : 0],
+      orderBy: '$colCatId ASC',
+    );
+    return result.map((json) => CategoryModel.fromMap(json)).toList();
+  }
+
+  // ==================== CÁC PHƯƠNG THỨC CRUD CHO GIAO DỊCH (TRANSACTIONS) ====================
 
   // 1. CREATE: Thêm giao dịch mới
   Future<int> insert(TransactionModel transaction) async {
     final db = await instance.database;
-    return await db.insert(tableName, transaction.toMap());
+    return await db.insert(tableTransactions, transaction.toMap());
   }
 
   // 2. READ: Lấy tất cả giao dịch (mới nhất lên đầu)
   Future<List<TransactionModel>> getAllTransactions() async {
     final db = await instance.database;
-    final result = await db.query(tableName, orderBy: '$colId DESC');
+    final result = await db.query(tableTransactions, orderBy: '$colId DESC');
     return result.map((json) => TransactionModel.fromMap(json)).toList();
   }
 
@@ -133,7 +237,7 @@ class DatabaseHelper {
   Future<List<TransactionModel>> getRecentTransactions({int limit = 5}) async {
     final db = await instance.database;
     final result = await db.query(
-      tableName,
+      tableTransactions,
       orderBy: '$colId DESC',
       limit: limit,
     );
@@ -144,7 +248,7 @@ class DatabaseHelper {
   Future<TransactionModel?> getTransactionById(int id) async {
     final db = await instance.database;
     final maps = await db.query(
-      tableName,
+      tableTransactions,
       where: '$colId = ?',
       whereArgs: [id],
     );
@@ -159,7 +263,7 @@ class DatabaseHelper {
   Future<int> update(TransactionModel transaction) async {
     final db = await instance.database;
     return await db.update(
-      tableName,
+      tableTransactions,
       transaction.toMap(),
       where: '$colId = ?',
       whereArgs: [transaction.id],
@@ -170,7 +274,7 @@ class DatabaseHelper {
   Future<int> delete(int id) async {
     final db = await instance.database;
     return await db.delete(
-      tableName,
+      tableTransactions,
       where: '$colId = ?',
       whereArgs: [id],
     );
@@ -179,16 +283,16 @@ class DatabaseHelper {
   // Xóa toàn bộ giao dịch
   Future<int> deleteAll() async {
     final db = await instance.database;
-    return await db.delete(tableName);
+    return await db.delete(tableTransactions);
   }
 
-  // ==================== TÍNH TOÁN THỐNG KÊ ====================
+  // ==================== TÍNH TOÁN THỐNG KÊ SQLITE ====================
 
   // Tính tổng thu nhập
   Future<double> getTotalIncome() async {
     final db = await instance.database;
     final result = await db.rawQuery(
-      'SELECT SUM($colAmount) as total FROM $tableName WHERE $colIsExpense = 0',
+      'SELECT SUM($colAmount) as total FROM $tableTransactions WHERE $colIsExpense = 0',
     );
     final total = result.first['total'];
     if (total != null) {
@@ -201,7 +305,7 @@ class DatabaseHelper {
   Future<double> getTotalExpense() async {
     final db = await instance.database;
     final result = await db.rawQuery(
-      'SELECT SUM($colAmount) as total FROM $tableName WHERE $colIsExpense = 1',
+      'SELECT SUM($colAmount) as total FROM $tableTransactions WHERE $colIsExpense = 1',
     );
     final total = result.first['total'];
     if (total != null) {
@@ -217,7 +321,29 @@ class DatabaseHelper {
     return income - expense;
   }
 
-  // Đóng database khi không còn sử dụng
+  // Thống kê chi tiêu theo từng danh mục
+  Future<Map<String, double>> getCategoryExpenseStats() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      '''
+      SELECT $colCategory, SUM($colAmount) as total
+      FROM $tableTransactions
+      WHERE $colIsExpense = 1
+      GROUP BY $colCategory
+      ORDER BY total DESC
+      ''',
+    );
+
+    final Map<String, double> stats = {};
+    for (final row in result) {
+      final category = row[colCategory] as String;
+      final total = (row['total'] as num).toDouble();
+      stats[category] = total;
+    }
+    return stats;
+  }
+
+  // Đóng database
   Future<void> close() async {
     final db = await instance.database;
     await db.close();
