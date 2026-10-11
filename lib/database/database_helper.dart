@@ -17,6 +17,7 @@ class DatabaseHelper {
   // Bảng Giao dịch (Transactions)
   static const String tableTransactions = 'transactions';
   static const String colId = 'id';
+  static const String colTransactionName = 'transaction_name';
   static const String colTitle = 'title';
   static const String colAmount = 'amount';
   static const String colCategory = 'category';
@@ -79,9 +80,12 @@ class DatabaseHelper {
     }
   }
 
-  // Bật hỗ trợ Foreign Key trong SQLite
+  // Bật hỗ trợ Foreign Key trong SQLite và đảm bảo tương thích cột mới
   Future<void> _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
+    try {
+      await db.execute('ALTER TABLE $tableTransactions ADD COLUMN $colTransactionName TEXT');
+    } catch (_) {}
   }
 
   // Khởi tạo các bảng trong Database
@@ -100,6 +104,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE $tableTransactions (
         $colId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $colTransactionName TEXT,
         $colTitle TEXT NOT NULL,
         $colAmount REAL NOT NULL,
         $colCategory TEXT NOT NULL,

@@ -4,6 +4,7 @@ import 'package:test1111/models/filter_criteria.dart';
 import 'package:test1111/screens/filter_screen.dart';
 import 'package:test1111/screens/profile_screen.dart';
 import 'package:test1111/screens/statistics_screen.dart';
+import 'package:test1111/main.dart';
 
 void main() {
   group('Kiểm thử Màn hình Thống kê (StatisticsView) - Buổi 7', () {
@@ -210,4 +211,29 @@ void main() {
       expect(returnedFilter!.timeRange, 'Tháng này');
     });
   });
+
+  group('Kiểm thử Màn hình Thêm giao dịch (AddTransactionScreen)', () {
+    testWidgets('Hiển thị đầy đủ ô nhập Tên giao dịch, Tiêu đề, Ghi chú, Số tiền, Danh mục', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: AddTransactionScreen(),
+        ),
+      );
+
+      // Kiểm tra tiêu đề màn hình
+      expect(find.text('Thêm giao dịch'), findsOneWidget);
+
+      // Kiểm tra các nhãn nhập liệu
+      expect(find.text('Tên giao dịch'), findsOneWidget);
+      expect(find.text('Tiêu đề'), findsOneWidget);
+      expect(find.text('Danh mục'), findsOneWidget);
+      expect(find.text('Số tiền'), findsOneWidget);
+      expect(find.text('Ngày giao dịch'), findsOneWidget);
+      expect(find.text('Ghi chú'), findsOneWidget);
+
+      // Kiểm tra nút Lưu
+      expect(find.text('Lưu'), findsOneWidget);
+    });
+  });
 }
+

@@ -78,6 +78,13 @@ test/
 
 ---
 
+4. **Tối ưu hóa Màn hình Thêm & Sửa giao dịch (`AddTransactionScreen` / `EditTransactionScreen`):**
+   - Tách biệt rõ ràng 3 ô nhập liệu độc lập: **Tên giao dịch**, **Tiêu đề**, và **Ghi chú**.
+   - Thiết kế TextField với `OutlineInputBorder`, hiển thị viền xanh `#2563EB` khi active (focus) giúp phản hồi cảm ứng và thao tác gõ phím trên thiết bị / máy ảo mượt mà, chuẩn xác.
+   - Đồng bộ trường `transaction_name` xuống CSDL SQLite, đảm bảo hiển thị chi tiết tên, tiêu đề và ghi chú lên danh sách giao dịch Dashboard.
+
+---
+
 ## 4. Kết quả Kiểm thử & Phân tích chất lượng mã nguồn
 
 1. **Phân tích tĩnh (`flutter analyze`):**
@@ -89,6 +96,6 @@ test/
 
 2. **Kiểm thử tự động (`flutter test`):**
    ```text
-   00:02 +19: All tests passed!
+   00:01 +21: All tests passed!
    ```
-   - Toàn bộ **19/19 test cases** chạy thành công, bao gồm test giao diện Thống kê, Cá nhân, Bộ lọc, CSDL SQLite CRUD và luồng nghiệp vụ.
+   - Toàn bộ **21/21 test cases** chạy thành công, bao gồm test giao diện Thống kê, Cá nhân, Bộ lọc, Thêm giao dịch, CSDL SQLite CRUD và luồng nghiệp vụ.

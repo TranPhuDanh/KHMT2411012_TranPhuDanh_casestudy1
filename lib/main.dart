@@ -1329,7 +1329,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item.title,
+                                item.transactionName != null && item.transactionName!.isNotEmpty
+                                    ? item.transactionName!
+                                    : item.title,
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -1346,7 +1348,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       color: Color(0xFF94A3B8),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  if (item.title.isNotEmpty && item.title != item.transactionName) ...[
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '• ${item.title}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF64748B),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(width: 8),
                                   Text(
                                     item.date,
                                     style: const TextStyle(
@@ -1356,6 +1369,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ],
                               ),
+                              if (item.note.isNotEmpty) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Ghi chú: ${item.note}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF64748B),
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1403,12 +1429,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool isExpense = true; // true = Chi tiêu, false = Thu nhập
   String selectedCategory = 'Ăn uống';
   DateTime selectedDate = DateTime.now();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
   final TextEditingController noteController = TextEditingController();
 
   @override
   void dispose() {
+    nameController.dispose();
     titleController.dispose();
     amountController.dispose();
     noteController.dispose();
@@ -1435,17 +1463,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final year = selectedDate.year.toString();
     final dateStr = '$day/$month/$year';
 
-    final title = titleController.text.trim().isNotEmpty
-        ? titleController.text.trim()
-        : (noteController.text.trim().isNotEmpty ? noteController.text.trim() : selectedCategory);
+    final name = nameController.text.trim();
+    final inputTitle = titleController.text.trim();
+    final note = noteController.text.trim();
+
+    // Xác định tên giao dịch và tiêu đề
+    final finalName = name.isNotEmpty
+        ? name
+        : (inputTitle.isNotEmpty ? inputTitle : selectedCategory);
+
+    final finalTitle = inputTitle.isNotEmpty
+        ? inputTitle
+        : (name.isNotEmpty ? name : selectedCategory);
 
     final transaction = TransactionModel(
-      title: title,
+      transactionName: finalName,
+      title: finalTitle,
       amount: amount,
       category: selectedCategory,
       date: dateStr,
       isExpense: isExpense,
-      note: noteController.text.trim(),
+      note: note,
     );
 
     await DatabaseHelper.instance.insert(transaction);
@@ -1506,11 +1544,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             const SizedBox(height: 24),
 
             // Tên giao dịch
-            _buildLabel('Tên giao dịch (Tiêu đề)'),
+            _buildLabel('Tên giao dịch'),
+            const SizedBox(height: 8),
+            _buildTextField(
+              controller: nameController,
+              hintText: 'Nhập tên giao dịch (vd: Ăn trưa, Đổ xăng, Mua đồ...)',
+            ),
+            const SizedBox(height: 20),
+
+            // Tiêu đề
+            _buildLabel('Tiêu đề'),
             const SizedBox(height: 8),
             _buildTextField(
               controller: titleController,
-              hintText: 'Nhập tên giao dịch (vd: Ăn trưa, Đổ xăng...)',
+              hintText: 'Nhập tiêu đề giao dịch (vd: Đi ăn cùng đồng nghiệp...)',
             ),
             const SizedBox(height: 20),
 
@@ -1542,7 +1589,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             const SizedBox(height: 8),
             _buildTextField(
               controller: noteController,
-              hintText: 'Nhập ghi chú (tùy chọn)',
+              hintText: 'Nhập ghi chú chi tiết (tùy chọn)',
               maxLines: 3,
             ),
             const SizedBox(height: 32),
@@ -1707,30 +1754,40 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      style: const TextStyle(
+        fontSize: 15,
+        color: Color(0xFF0F172A),
       ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFFCBD5E1),
-            fontSize: 15,
-          ),
-          suffixText: suffixText,
-          suffixStyle: const TextStyle(
-            color: Color(0xFF94A3B8),
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          border: InputBorder.none,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          color: Color(0xFF94A3B8),
+          fontSize: 14,
+        ),
+        suffixText: suffixText,
+        suffixStyle: const TextStyle(
+          color: Color(0xFF64748B),
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
         ),
       ),
     );
@@ -1823,6 +1880,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   bool isExpense = true;
   String selectedCategory = 'Ăn uống';
   DateTime selectedDate = DateTime.now();
+  late final TextEditingController nameController;
   late final TextEditingController titleController;
   late final TextEditingController amountController;
   late final TextEditingController noteController;
@@ -1834,6 +1892,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       final tx = widget.transaction!;
       isExpense = tx.isExpense;
       selectedCategory = tx.category;
+      nameController = TextEditingController(text: tx.transactionName ?? tx.title);
       titleController = TextEditingController(text: tx.title);
       amountController = TextEditingController(text: tx.amount.toInt().toString());
       noteController = TextEditingController(text: tx.note);
@@ -1846,6 +1905,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         selectedDate = DateTime(year, month, day);
       }
     } else {
+      nameController = TextEditingController(text: 'Ăn trưa');
       titleController = TextEditingController(text: 'Ăn trưa');
       amountController = TextEditingController(text: '100000');
       noteController = TextEditingController(text: 'Ăn trưa');
@@ -1854,6 +1914,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
   @override
   void dispose() {
+    nameController.dispose();
     titleController.dispose();
     amountController.dispose();
     noteController.dispose();
@@ -1880,18 +1941,27 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final year = selectedDate.year.toString();
     final dateStr = '$day/$month/$year';
 
-    final title = titleController.text.trim().isNotEmpty
-        ? titleController.text.trim()
-        : selectedCategory;
+    final name = nameController.text.trim();
+    final inputTitle = titleController.text.trim();
+    final note = noteController.text.trim();
+
+    final finalName = name.isNotEmpty
+        ? name
+        : (inputTitle.isNotEmpty ? inputTitle : selectedCategory);
+
+    final finalTitle = inputTitle.isNotEmpty
+        ? inputTitle
+        : (name.isNotEmpty ? name : selectedCategory);
 
     final updatedTx = TransactionModel(
       id: widget.transaction?.id,
-      title: title,
+      transactionName: finalName,
+      title: finalTitle,
       amount: amount,
       category: selectedCategory,
       date: dateStr,
       isExpense: isExpense,
-      note: noteController.text.trim(),
+      note: note,
     );
 
     if (widget.transaction?.id != null) {
@@ -1988,11 +2058,20 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
             const SizedBox(height: 24),
 
             // Tên giao dịch
-            _buildLabel('Tên giao dịch (Tiêu đề)'),
+            _buildLabel('Tên giao dịch'),
+            const SizedBox(height: 8),
+            _buildTextField(
+              controller: nameController,
+              hintText: 'Nhập tên giao dịch (vd: Ăn trưa, Đổ xăng, Mua đồ...)',
+            ),
+            const SizedBox(height: 20),
+
+            // Tiêu đề
+            _buildLabel('Tiêu đề'),
             const SizedBox(height: 8),
             _buildTextField(
               controller: titleController,
-              hintText: 'Nhập tên giao dịch',
+              hintText: 'Nhập tiêu đề giao dịch (vd: Đi ăn cùng đồng nghiệp...)',
             ),
             const SizedBox(height: 20),
 
@@ -2189,30 +2268,40 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      style: const TextStyle(
+        fontSize: 15,
+        color: Color(0xFF0F172A),
       ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFFCBD5E1),
-            fontSize: 15,
-          ),
-          suffixText: suffixText,
-          suffixStyle: const TextStyle(
-            color: Color(0xFF94A3B8),
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          border: InputBorder.none,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          color: Color(0xFF94A3B8),
+          fontSize: 14,
+        ),
+        suffixText: suffixText,
+        suffixStyle: const TextStyle(
+          color: Color(0xFF64748B),
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
         ),
       ),
     );

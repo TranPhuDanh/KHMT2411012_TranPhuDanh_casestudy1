@@ -84,6 +84,29 @@ void main() {
       expect(updated.amount, 550000.0);
       expect(updated.category, 'Khác');
     });
+
+    test('Lưu và đọc trường transactionName (Tên giao dịch) riêng biệt', () {
+      const transaction = TransactionModel(
+        id: 3,
+        transactionName: 'Ăn trưa',
+        title: 'Cơm tấm sườn bì',
+        amount: 45000.0,
+        category: 'Ăn uống',
+        date: '11/10/2026',
+        isExpense: true,
+        note: 'Ăn cùng đồng nghiệp',
+      );
+
+      final map = transaction.toMap();
+      expect(map['transaction_name'], 'Ăn trưa');
+      expect(map['title'], 'Cơm tấm sườn bì');
+      expect(map['note'], 'Ăn cùng đồng nghiệp');
+
+      final fromMap = TransactionModel.fromMap(map);
+      expect(fromMap.transactionName, 'Ăn trưa');
+      expect(fromMap.title, 'Cơm tấm sườn bì');
+      expect(fromMap.note, 'Ăn cùng đồng nghiệp');
+    });
   });
 
   group('Kiểm thử Database SQLite CRUD & Thống kê', () {
