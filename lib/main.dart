@@ -347,82 +347,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
-        elevation: 0,
-        leading: _currentBottomIndex == 0
-            ? IconButton(
-                icon: const Icon(Icons.menu, color: Color(0xFF0F172A), size: 26),
-                onPressed: () {},
-              )
-            : null,
-        title: Text(
-          _getAppBarTitle(),
-          style: const TextStyle(
-            color: Color(0xFF0F172A),
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          // Nút mở Bộ lọc trên tab Danh sách giao dịch
-          if (_currentBottomIndex == 1)
-            IconButton(
-              icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
-              tooltip: 'Bộ lọc nâng cao',
-              onPressed: _openFilterScreen,
-            ),
-          // Nút làm mới dữ liệu từ SQLite
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF0F172A)),
-            tooltip: 'Tải lại dữ liệu',
-            onPressed: _loadData,
-          ),
-          // Icon chuông thông báo có badge đỏ trên tab Trang chủ & Giao dịch
-          if (_currentBottomIndex == 0 || _currentBottomIndex == 1)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: Color(0xFF0F172A),
-                      size: 26,
-                    ),
-                    onPressed: () {},
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        '${_allTransactions.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
+      backgroundColor: (_currentBottomIndex == 2 || _currentBottomIndex == 3)
+          ? Colors.white
+          : const Color(0xFFF8FAFC),
+      appBar: (_currentBottomIndex == 0 || _currentBottomIndex == 1)
+          ? AppBar(
+              backgroundColor: const Color(0xFFF8FAFC),
+              elevation: 0,
+              leading: _currentBottomIndex == 0
+                  ? IconButton(
+                      icon: const Icon(Icons.menu, color: Color(0xFF0F172A), size: 26),
+                      onPressed: () {},
+                    )
+                  : null,
+              title: Text(
+                _getAppBarTitle(),
+                style: const TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-        ],
-      ),
+              actions: [
+                // Nút mở Bộ lọc trên tab Danh sách giao dịch
+                if (_currentBottomIndex == 1)
+                  IconButton(
+                    icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
+                    tooltip: 'Bộ lọc nâng cao',
+                    onPressed: _openFilterScreen,
+                  ),
+                // Nút làm mới dữ liệu từ SQLite
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Color(0xFF0F172A)),
+                  tooltip: 'Tải lại dữ liệu',
+                  onPressed: _loadData,
+                ),
+                // Icon chuông thông báo có badge đỏ trên tab Trang chủ & Giao dịch
+                if (_currentBottomIndex == 0 || _currentBottomIndex == 1)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: Color(0xFF0F172A),
+                            size: 26,
+                          ),
+                          onPressed: () {},
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '${_allTransactions.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

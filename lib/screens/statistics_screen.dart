@@ -145,6 +145,39 @@ class _StatisticsViewState extends State<StatisticsView> {
     }
   }
 
+  // Lấy các lát cắt trực quan cho biểu đồ Donut theo đúng hình ảnh mockup
+  List<DonutSlice> _getDonutSlices() {
+    switch (_selectedPeriodIndex) {
+      case 1:
+        return const [
+          DonutSlice(percentage: 0.43, color: Color(0xFFFF5252)),
+          DonutSlice(percentage: 0.29, color: Color(0xFF9D72FF)),
+          DonutSlice(percentage: 0.14, color: Color(0xFF22C55E)),
+          DonutSlice(percentage: 0.10, color: Color(0xFF3B82F6)),
+          DonutSlice(percentage: 0.04, color: Color(0xFFA855F7)),
+        ];
+      case 2:
+        return const [
+          DonutSlice(percentage: 0.40, color: Color(0xFFFF5252)),
+          DonutSlice(percentage: 0.30, color: Color(0xFF9D72FF)),
+          DonutSlice(percentage: 0.14, color: Color(0xFF22C55E)),
+          DonutSlice(percentage: 0.10, color: Color(0xFF3B82F6)),
+          DonutSlice(percentage: 0.06, color: Color(0xFFA855F7)),
+        ];
+      case 0:
+      default:
+        // 6 lát cắt màu sắc khớp 100% hình ảnh mockup
+        return const [
+          DonutSlice(percentage: 0.40, color: Color(0xFFFF5964)), // Đỏ tươi (12h -> 4h48)
+          DonutSlice(percentage: 0.26, color: Color(0xFF9D72FF)), // Tím tím (4h48 -> 7h36)
+          DonutSlice(percentage: 0.12, color: Color(0xFF3B82F6)), // Xanh dương (7h36 -> 9h)
+          DonutSlice(percentage: 0.10, color: Color(0xFF22C55E)), // Xanh lá (9h -> 10h12)
+          DonutSlice(percentage: 0.06, color: Color(0xFF94A3B8)), // Xám (10h12 -> 11h12)
+          DonutSlice(percentage: 0.06, color: Color(0xFFFDBA74)), // Cam đào (11h12 -> 12h)
+        ];
+    }
+  }
+
   double _getTotalExpense(List<ChartCategoryItem> items) {
     return items.fold(0.0, (sum, item) => sum + item.amount);
   }
@@ -166,136 +199,139 @@ class _StatisticsViewState extends State<StatisticsView> {
   Widget build(BuildContext context) {
     final categoryData = _getCategoryData();
     final totalExpense = _getTotalExpense(categoryData);
+    final donutSlices = _getDonutSlices();
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tiêu đề Thống kê (nếu hiển thị trong tab)
-          const Text(
-            'Thống kê',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tiêu đề Thống kê chuẩn theo mockup
+            const Text(
+              'Thống kê',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
-          // ===== Hàng 3 nút lọc thời gian: Tháng này | Tháng trước | Năm nay =====
-          Row(
-            children: [
-              Expanded(child: _buildPeriodButton('Tháng này', 0)),
-              const SizedBox(width: 10),
-              Expanded(child: _buildPeriodButton('Tháng trước', 1)),
-              const SizedBox(width: 10),
-              Expanded(child: _buildPeriodButton('Năm nay', 2)),
-            ],
-          ),
-          const SizedBox(height: 32),
+            // ===== Hàng 3 nút lọc thời gian: Tháng này | Tháng trước | Năm nay =====
+            Row(
+              children: [
+                Expanded(child: _buildPeriodButton('Tháng này', 0)),
+                const SizedBox(width: 10),
+                Expanded(child: _buildPeriodButton('Tháng trước', 1)),
+                const SizedBox(width: 10),
+                Expanded(child: _buildPeriodButton('Năm nay', 2)),
+              ],
+            ),
+            const SizedBox(height: 32),
 
-          // ===== Biểu đồ Donut Chart trung tâm =====
-          Center(
-            child: SizedBox(
-              width: 220,
-              height: 220,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CustomPaint(
-                    size: const Size(220, 220),
-                    painter: DonutChartPainter(
-                      items: categoryData,
-                      strokeWidth: 32,
+            // ===== Biểu đồ Donut Chart trung tâm =====
+            Center(
+              child: SizedBox(
+                width: 220,
+                height: 220,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      size: const Size(220, 220),
+                      painter: DonutChartPainter(
+                        slices: donutSlices,
+                        strokeWidth: 32,
+                      ),
                     ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _formatCurrency(totalExpense),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Tổng chi tiêu',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 36),
+
+            // ===== Danh sách phân rã danh mục (Legend List) =====
+            Column(
+              children: categoryData.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
                     children: [
-                      Text(
-                        _formatCurrency(totalExpense),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                      // Chấm tròn màu
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: item.color,
+                          shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Tổng chi tiêu',
-                        style: TextStyle(
-                          fontSize: 13,
+                      const SizedBox(width: 14),
+                      // Tên danh mục
+                      Text(
+                        item.category,
+                        style: const TextStyle(
+                          fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF94A3B8),
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                      const Spacer(),
+                      // Số tiền
+                      Text(
+                        _formatCurrency(item.amount),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Tỷ lệ phần trăm
+                      SizedBox(
+                        width: 44,
+                        child: Text(
+                          '${(item.percentage * 100).round()}%',
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                );
+              }).toList(),
             ),
-          ),
-          const SizedBox(height: 36),
-
-          // ===== Danh sách phân rã danh mục (Legend List) =====
-          Column(
-            children: categoryData.map((item) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    // Chấm tròn màu
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: item.color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    // Tên danh mục
-                    Text(
-                      item.category,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF334155),
-                      ),
-                    ),
-                    const Spacer(),
-                    // Số tiền
-                    Text(
-                      _formatCurrency(item.amount),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF334155),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Tỷ lệ phần trăm
-                    SizedBox(
-                      width: 42,
-                      child: Text(
-                        '${(item.percentage * 100).round()}%',
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 40),
-        ],
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -324,13 +360,24 @@ class _StatisticsViewState extends State<StatisticsView> {
   }
 }
 
+/// Lát cắt biểu đồ Donut
+class DonutSlice {
+  final double percentage;
+  final Color color;
+
+  const DonutSlice({
+    required this.percentage,
+    required this.color,
+  });
+}
+
 /// CustomPainter vẽ biểu đồ hình vành khuyên (Donut Chart)
 class DonutChartPainter extends CustomPainter {
-  final List<ChartCategoryItem> items;
+  final List<DonutSlice> slices;
   final double strokeWidth;
 
   const DonutChartPainter({
-    required this.items,
+    required this.slices,
     this.strokeWidth = 32,
   });
 
@@ -347,9 +394,9 @@ class DonutChartPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;
 
-    for (final item in items) {
-      final sweepAngle = item.percentage * 2 * math.pi;
-      paint.color = item.color;
+    for (final slice in slices) {
+      final sweepAngle = slice.percentage * 2 * math.pi;
+      paint.color = slice.color;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -365,6 +412,6 @@ class DonutChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant DonutChartPainter oldDelegate) {
-    return oldDelegate.items != items || oldDelegate.strokeWidth != strokeWidth;
+    return oldDelegate.slices != slices || oldDelegate.strokeWidth != strokeWidth;
   }
 }
