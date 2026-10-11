@@ -415,3 +415,19 @@ class DonutChartPainter extends CustomPainter {
     return oldDelegate.slices != slices || oldDelegate.strokeWidth != strokeWidth;
   }
 }
+
+/// Màn hình Thống kê đầy đủ (có thể dùng độc lập với Scaffold)
+class StatisticsScreen extends StatelessWidget {
+  final List<TransactionModel>? transactions;
+
+  const StatisticsScreen({super.key, this.transactions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: StatisticsView(transactions: transactions),
+    );
+  }
+}
+

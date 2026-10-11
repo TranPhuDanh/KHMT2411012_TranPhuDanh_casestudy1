@@ -241,14 +241,15 @@ Color getCategoryColor(String category) {
 
 // ==================== Màn hình Dashboard (Quản lý thu chi) ====================
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int initialIndex;
+  const DashboardScreen({super.key, this.initialIndex = 0});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _currentBottomIndex = 0;
+  late int _currentBottomIndex;
   bool _isBalanceVisible = true;
   bool _isLoading = true;
   String _searchQuery = '';
@@ -264,6 +265,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _currentBottomIndex = widget.initialIndex;
     _loadData();
   }
 

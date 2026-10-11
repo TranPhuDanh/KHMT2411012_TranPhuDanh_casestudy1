@@ -71,6 +71,19 @@ void main() {
 
       expect(find.text('7.400.000 đ'), findsOneWidget);
     });
+
+    testWidgets('Màn hình StatisticsScreen độc lập khởi tạo Scaffold và hiển thị StatisticsView', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: StatisticsScreen(),
+        ),
+      );
+
+      expect(find.byType(StatisticsScreen), findsOneWidget);
+      expect(find.byType(StatisticsView), findsOneWidget);
+      expect(find.text('Thống kê'), findsOneWidget);
+      expect(find.text('5.000.000 đ'), findsOneWidget);
+    });
   });
 
   group('Kiểm thử Màn hình Cá nhân (ProfileView) - Buổi 7', () {

@@ -52,4 +52,4 @@ flutter test
 # Kiểm tra phân tích cú pháp tĩnh
 flutter analyze
 ```
-- Kết quả: **`All tests passed!` (18/18 tests pass, 0 issues)**.
+- Kết quả: **`All tests passed!` (19/19 tests pass, 0 issues)**.

@@ -89,6 +89,6 @@ test/
 
 2. **Kiểm thử tự động (`flutter test`):**
    ```text
-   00:01 +18: All tests passed!
+   00:02 +19: All tests passed!
    ```
-   - Toàn bộ **18/18 test cases** chạy thành công, bao gồm test giao diện Thống kê, Cá nhân, Bộ lọc, CSDL SQLite CRUD và luồng nghiệp vụ.
+   - Toàn bộ **19/19 test cases** chạy thành công, bao gồm test giao diện Thống kê, Cá nhân, Bộ lọc, CSDL SQLite CRUD và luồng nghiệp vụ.
