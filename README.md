@@ -18,12 +18,14 @@
 | **Buổi 4** | `buoi4` | Xây dựng **Màn hình Dashboard Quản lý thu chi (`DashboardScreen`)** và liên kết điều hướng hoàn chỉnh giữa các màn hình. |
 | **Buổi 5** | `buoi5` | **Thiết kế và xây dựng cơ sở dữ liệu SQLite cho ứng dụng**: Mô hình hóa CSDL quan hệ (`categories`, `transactions`), xây dựng Singleton `DatabaseHelper`, thực hiện trọn vẹn CRUD, tính toán thống kê tự động và đồng bộ trực tiếp với giao diện. |
 | **Buổi 6** | `buoi6` | **Hoàn thiện các màn hình thêm, sửa và load thông tin giao dịch lên màn hình Dashboard**: Đổ dữ liệu động từ SQLite lên thẻ số dư, tóm tắt thu/chi và 5 giao dịch gần đây; hoàn thiện luồng Thêm/Sửa/Xóa giao dịch (có xác nhận); thêm tính năng tìm kiếm, bộ lọc danh mục và xóa vuốt (`Dismissible`). |
+| **Buổi 7** | `buoi7` | **Hoàn thiện màn hình Thống kê, màn hình Cá nhân và màn hình Bộ lọc**: Biểu đồ Donut Chart phân rã danh mục chi tiêu theo kỳ (Tháng này, Tháng trước, Năm nay); màn hình Cá nhân quản lý thông tin, ngân sách, danh mục và bảo mật; màn hình Bộ lọc giao dịch đa tiêu chí (loại, danh mục, thời gian, tùy chỉnh khoảng ngày). |
 
 ---
 
 ## 📄 Tài liệu chi tiết các buổi học
 - 👉 **[Tài liệu Thiết kế Cơ sở dữ liệu SQLite Buổi 5 (DATABASE_DESIGN.md)](DATABASE_DESIGN.md)**
 - 👉 **[Báo cáo Hoàn thiện Màn hình Thêm, Sửa & Dashboard Buổi 6 (BUOI6_REPORT.md)](BUOI6_REPORT.md)**
+- 👉 **[Báo cáo Hoàn thiện Màn hình Thống kê, Cá nhân & Bộ lọc Buổi 7 (BUOI7_REPORT.md)](BUOI7_REPORT.md)**
 
 ---
 
@@ -50,4 +52,4 @@ flutter test
 # Kiểm tra phân tích cú pháp tĩnh
 flutter analyze
 ```
-- Kết quả: **`All tests passed!` (12/12 tests pass, 0 issues)**.
+- Kết quả: **`All tests passed!` (18/18 tests pass, 0 issues)**.

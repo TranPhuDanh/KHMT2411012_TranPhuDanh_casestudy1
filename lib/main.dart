@@ -2,7 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'database/database_helper.dart';
+import 'models/filter_criteria.dart';
 import 'models/transaction_model.dart';
+import 'screens/filter_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/statistics_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -249,6 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   int _filterType = 0; // 0: Tất cả, 1: Chi tiêu, 2: Thu nhập
+  FilterCriteria _filterCriteria = const FilterCriteria();
 
   double _balance = 0.0;
   double _totalIncome = 0.0;
@@ -289,6 +294,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // Mở màn hình Bộ lọc (FilterScreen)
+  Future<void> _openFilterScreen() async {
+    final result = await Navigator.push<FilterCriteria>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FilterScreen(
+          initialFilter: _filterCriteria,
+        ),
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        _filterCriteria = result;
+      });
+    }
+  }
+
   // Định dạng số tiền kiểu VNĐ (vd: 50000 -> 50.000 đ)
   String _formatCurrency(double amount) {
     final isNegative = amount < 0;
@@ -307,6 +329,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   IconData _getCategoryIcon(String category) => getCategoryIcon(category);
   Color _getCategoryColor(String category) => getCategoryColor(category);
 
+  String _getAppBarTitle() {
+    switch (_currentBottomIndex) {
+      case 0:
+        return 'Quản lý thu chi';
+      case 1:
+        return 'Danh sách giao dịch';
+      case 2:
+        return 'Thống kê';
+      case 3:
+        return 'Cá nhân';
+      default:
+        return 'Quản lý thu chi';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -314,14 +351,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF8FAFC),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF0F172A), size: 26),
-          onPressed: () {},
-        ),
+        leading: _currentBottomIndex == 0
+            ? IconButton(
+                icon: const Icon(Icons.menu, color: Color(0xFF0F172A), size: 26),
+                onPressed: () {},
+              )
+            : null,
         title: Text(
-          _currentBottomIndex == 0
-              ? 'Quản lý thu chi'
-              : (_currentBottomIndex == 1 ? 'Danh sách giao dịch' : 'Thống kê thu chi'),
+          _getAppBarTitle(),
           style: const TextStyle(
             color: Color(0xFF0F172A),
             fontSize: 20,
@@ -329,53 +366,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
+          // Nút mở Bộ lọc trên tab Danh sách giao dịch
+          if (_currentBottomIndex == 1)
+            IconButton(
+              icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
+              tooltip: 'Bộ lọc nâng cao',
+              onPressed: _openFilterScreen,
+            ),
           // Nút làm mới dữ liệu từ SQLite
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF0F172A)),
             tooltip: 'Tải lại dữ liệu',
             onPressed: _loadData,
           ),
-          // Icon chuông thông báo có badge đỏ
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Stack(
-              alignment: Alignment.topRight,
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: Color(0xFF0F172A),
-                    size: 26,
+          // Icon chuông thông báo có badge đỏ trên tab Trang chủ & Giao dịch
+          if (_currentBottomIndex == 0 || _currentBottomIndex == 1)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Color(0xFF0F172A),
+                      size: 26,
+                    ),
+                    onPressed: () {},
                   ),
-                  onPressed: () {},
-                ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEF4444),
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${_allTransactions.length}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
                       ),
-                      textAlign: TextAlign.center,
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '${_allTransactions.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
       body: _isLoading
@@ -384,26 +429,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onRefresh: _loadData,
               child: _buildCurrentTabBody(),
             ),
-      // Nút Thêm giao dịch (+) tròn màu xanh nổi bật
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final added = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddTransactionScreen(),
-            ),
-          );
-          if (added == true) {
-            _loadData();
-          }
-        },
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 30),
-      ),
-      // Thanh điều hướng đáy (Bottom Navigation Bar)
+      // Nút Thêm giao dịch (+) tròn màu xanh nổi bật (chỉ hiển thị ở tab Trang chủ và Giao dịch)
+      floatingActionButton: (_currentBottomIndex == 0 || _currentBottomIndex == 1)
+          ? FloatingActionButton(
+              onPressed: () async {
+                final added = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddTransactionScreen(),
+                  ),
+                );
+                if (added == true) {
+                  _loadData();
+                }
+              },
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add, size: 30),
+            )
+          : null,
+      // Thanh điều hướng đáy (Bottom Navigation Bar) gồm 4 tab theo mockup Buổi 7
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -423,16 +470,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
           elevation: 0,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
               label: 'Trang chủ',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.article_outlined),
+              icon: Icon(Icons.format_list_bulleted),
+              activeIcon: Icon(Icons.format_list_bulleted),
               label: 'Giao dịch',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.pie_chart_outline_rounded),
+              icon: Icon(Icons.bar_chart_rounded),
+              activeIcon: Icon(Icons.bar_chart_rounded),
               label: 'Thống kê',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline_rounded),
+              activeIcon: Icon(Icons.person),
+              label: 'Cá nhân',
             ),
           ],
         ),
@@ -442,12 +497,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Chọn nội dung hiển thị theo tab
   Widget _buildCurrentTabBody() {
-    if (_currentBottomIndex == 1) {
-      return _buildAllTransactionsView();
-    } else if (_currentBottomIndex == 2) {
-      return _buildStatisticsView();
+    switch (_currentBottomIndex) {
+      case 1:
+        return _buildAllTransactionsView();
+      case 2:
+        return StatisticsView(transactions: _allTransactions);
+      case 3:
+        return ProfileView(
+          onLogout: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              (route) => false,
+            );
+          },
+        );
+      case 0:
+      default:
+        return _buildHomeView();
     }
-    return _buildHomeView();
   }
 
   // Tab 0: Trang chủ
@@ -503,11 +571,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  bool _matchesTimeRange(String dateStr, String timeRange, DateTimeRange? customRange) {
+    DateTime? txDate;
+    try {
+      final parts = dateStr.split('/');
+      if (parts.length == 3) {
+        txDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (_) {}
+    if (txDate == null) return true;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final txDay = DateTime(txDate.year, txDate.month, txDate.day);
+
+    switch (timeRange) {
+      case 'Hôm nay':
+        return txDay == today;
+      case '7 ngày qua':
+        final sevenDaysAgo = today.subtract(const Duration(days: 7));
+        return (txDay.isAfter(sevenDaysAgo) || txDay == sevenDaysAgo) &&
+            (txDay.isBefore(today) || txDay == today);
+      case 'Tháng này':
+        return txDay.year == now.year && txDay.month == now.month;
+      case 'Tùy chỉnh':
+        if (customRange == null) return true;
+        final start = DateTime(customRange.start.year, customRange.start.month, customRange.start.day);
+        final end = DateTime(customRange.end.year, customRange.end.month, customRange.end.day);
+        return (txDay.isAfter(start) || txDay == start) &&
+            (txDay.isBefore(end) || txDay == end);
+      default:
+        return true;
+    }
+  }
+
   // Tab 1: Toàn bộ danh sách giao dịch
   Widget _buildAllTransactionsView() {
     final filtered = _allTransactions.where((tx) {
+      // 1. Lọc theo filter chip nhanh (Tất cả, Chi tiêu, Thu nhập)
       if (_filterType == 1 && !tx.isExpense) return false;
       if (_filterType == 2 && tx.isExpense) return false;
+
+      // 2. Lọc theo màn hình Bộ lọc (FilterScreen)
+      if (!_filterCriteria.selectAllTypes) {
+        if (_filterCriteria.includeIncome && tx.isExpense) return false;
+        if (_filterCriteria.includeExpense && !tx.isExpense) return false;
+      }
+      if (_filterCriteria.category != 'Tất cả danh mục' &&
+          tx.category != _filterCriteria.category) {
+        return false;
+      }
+      // Lọc theo khoảng thời gian nếu không phải mặc định
+      if (_filterCriteria.timeRange != 'Hôm nay' || _filterCriteria.customDateRange != null) {
+        if (!_matchesTimeRange(tx.date, _filterCriteria.timeRange, _filterCriteria.customDateRange)) {
+          return false;
+        }
+      }
+
+      // 3. Lọc theo từ khóa tìm kiếm
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matchTitle = tx.title.toLowerCase().contains(query);
@@ -518,29 +639,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return true;
     }).toList();
 
+    final hasAdvancedFilter = !_filterCriteria.selectAllTypes ||
+        _filterCriteria.category != 'Tất cả danh mục' ||
+        _filterCriteria.timeRange != 'Hôm nay';
+
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Ô tìm kiếm giao dịch
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: TextField(
-              onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: const InputDecoration(
-                hintText: 'Tìm kiếm giao dịch (tiêu đề, danh mục)...',
-                hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
-                prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          // Ô tìm kiếm giao dịch kèm Nút mở Bộ lọc
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: TextField(
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                    decoration: const InputDecoration(
+                      hintText: 'Tìm kiếm giao dịch...',
+                      hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+                      prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: _openFilterScreen,
+                child: Container(
+                  padding: const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: hasAdvancedFilter ? const Color(0xFF1D4ED8) : const Color(0xFF2563EB),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
 
@@ -557,6 +711,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+
+          // Badge thông báo khi đang áp dụng Bộ lọc nâng cao
+          if (hasAdvancedFilter) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_alt, size: 16, color: Color(0xFF2563EB)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Đang lọc: ${_filterCriteria.category} • ${_filterCriteria.timeRange}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1D4ED8),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _filterCriteria = const FilterCriteria();
+                      });
+                    },
+                    child: const Icon(Icons.close, size: 16, color: Color(0xFF1D4ED8)),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
 
           Text(
@@ -596,122 +788,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: isSelected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
-      ),
-    );
-  }
-
-  // Tab 2: Thống kê chi tiêu theo danh mục
-  Widget _buildStatisticsView() {
-    // Nhóm chi tiêu theo danh mục
-    final Map<String, double> categoryExpense = {};
-    for (final tx in _allTransactions) {
-      if (tx.isExpense) {
-        categoryExpense[tx.category] = (categoryExpense[tx.category] ?? 0.0) + tx.amount;
-      }
-    }
-
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildIncomeExpenseRow(),
-          const SizedBox(height: 24),
-          const Text(
-            'Phân loại chi tiêu theo danh mục',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (categoryExpense.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Center(
-                child: Text(
-                  'Chưa có dữ liệu chi tiêu để thống kê',
-                  style: TextStyle(color: Color(0xFF94A3B8)),
-                ),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                children: categoryExpense.entries.map((entry) {
-                  final category = entry.key;
-                  final amount = entry.value;
-                  final percentage = _totalExpense > 0 ? (amount / _totalExpense) * 100 : 0.0;
-                  final color = _getCategoryColor(category);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  category,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              '${_formatCurrency(amount)} (${percentage.toStringAsFixed(1)}%)',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF334155),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: _totalExpense > 0 ? amount / _totalExpense : 0,
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            valueColor: AlwaysStoppedAnimation<Color>(color),
-                            minHeight: 6,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          const SizedBox(height: 80),
-        ],
       ),
     );
   }
