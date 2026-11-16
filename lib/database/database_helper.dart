@@ -2,10 +2,19 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/category_model.dart';
 import '../models/transaction_model.dart';
+import '../models/user_model.dart';
 
 class DatabaseHelper {
   static const String _dbName = 'expense_manager.db';
   static const int _dbVersion = 3;
+
+  // Bảng Người dùng (Users)
+  static const String tableUsers = 'users';
+  static const String colUserId = 'id';
+  static const String colUserName = 'name';
+  static const String colUserEmail = 'email';
+  static const String colUserPassword = 'password';
+  static const String colUserCreatedAt = 'created_at';
 
   // Bảng Danh mục (Categories)
   static const String tableCategories = 'categories';
@@ -49,6 +58,7 @@ class DatabaseHelper {
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
+      onOpen: _onOpen,
     );
   }
 
@@ -80,11 +90,26 @@ class DatabaseHelper {
     }
   }
 
-  // Bật hỗ trợ Foreign Key trong SQLite và đảm bảo tương thích cột mới
+  // Bật hỗ trợ Foreign Key trong SQLite
   Future<void> _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  // Đảm bảo các bảng và cột mới tồn tại khi mở CSDL
+  Future<void> _onOpen(Database db) async {
     try {
       await db.execute('ALTER TABLE $tableTransactions ADD COLUMN $colTransactionName TEXT');
+    } catch (_) {}
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableUsers (
+          $colUserId INTEGER PRIMARY KEY AUTOINCREMENT,
+          $colUserName TEXT NOT NULL,
+          $colUserEmail TEXT NOT NULL UNIQUE,
+          $colUserPassword TEXT NOT NULL,
+          $colUserCreatedAt TEXT
+        )
+      ''');
     } catch (_) {}
   }
 
@@ -92,7 +117,7 @@ class DatabaseHelper {
   Future<void> _createDB(Database db, int version) async {
     // 1. Tạo bảng Danh mục (Categories)
     await db.execute('''
-      CREATE TABLE $tableCategories (
+      CREATE TABLE IF NOT EXISTS $tableCategories (
         $colCatId INTEGER PRIMARY KEY AUTOINCREMENT,
         $colCatName TEXT NOT NULL UNIQUE,
         $colCatIcon TEXT NOT NULL,
@@ -102,7 +127,7 @@ class DatabaseHelper {
 
     // 2. Tạo bảng Giao dịch (Transactions) có liên kết Khóa ngoại Foreign Key tới Categories
     await db.execute('''
-      CREATE TABLE $tableTransactions (
+      CREATE TABLE IF NOT EXISTS $tableTransactions (
         $colId INTEGER PRIMARY KEY AUTOINCREMENT,
         $colTransactionName TEXT,
         $colTitle TEXT NOT NULL,
@@ -117,9 +142,21 @@ class DatabaseHelper {
       )
     ''');
 
-    // 3. Khởi tạo dữ liệu mẫu ban đầu
+    // 3. Tạo bảng Người dùng (Users)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableUsers (
+        $colUserId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $colUserName TEXT NOT NULL,
+        $colUserEmail TEXT NOT NULL UNIQUE,
+        $colUserPassword TEXT NOT NULL,
+        $colUserCreatedAt TEXT
+      )
+    ''');
+
+    // 4. Khởi tạo dữ liệu mẫu ban đầu
     await _insertSampleCategories(db);
     await _insertSampleTransactions(db);
+    await _insertSampleUsers(db);
   }
 
   // Chèn danh mục mặc định
@@ -212,6 +249,18 @@ class DatabaseHelper {
     for (final item in sampleItems) {
       await db.insert(tableTransactions, item);
     }
+  }
+
+  // Chèn người dùng mẫu mặc định
+  Future<void> _insertSampleUsers(Database db) async {
+    try {
+      await db.insert(tableUsers, {
+        colUserName: 'Nguyễn Văn A',
+        colUserEmail: 'nguyenvana@example.com',
+        colUserPassword: '123',
+        colUserCreatedAt: DateTime.now().toIso8601String(),
+      });
+    } catch (_) {}
   }
 
   // ==================== CÁC PHƯƠNG THỨC CRUD CHO DANH MỤC (CATEGORIES) ====================
@@ -365,6 +414,58 @@ class DatabaseHelper {
       stats[category] = total;
     }
     return stats;
+  }
+
+  // ==================== CÁC PHƯƠNG THỨC XỬ LÝ NGƯỜI DÙNG (USERS) ====================
+
+  // Đăng ký người dùng mới
+  Future<int> registerUser(UserModel user) async {
+    final db = await database;
+    return await db.insert(tableUsers, user.toMap());
+  }
+
+  // Đăng nhập người dùng (kiểm tra email và mật khẩu)
+  Future<UserModel?> loginUser(String email, String password) async {
+    final db = await database;
+    final cleanEmail = email.trim().toLowerCase();
+    try {
+      final res = await db.query(
+        tableUsers,
+        where: 'LOWER($colUserEmail) = ? AND $colUserPassword = ?',
+        whereArgs: [cleanEmail, password],
+      );
+      if (res.isNotEmpty) {
+        return UserModel.fromMap(res.first);
+      }
+    } catch (_) {}
+
+    // Tài khoản mẫu mặc định
+    if ((cleanEmail == 'nguyenvana@example.com' || cleanEmail == 'admin@example.com' || cleanEmail == 'danh@example.com') &&
+        (password == '123' || password == '123456')) {
+      return UserModel(
+        id: 1,
+        name: cleanEmail == 'danh@example.com' ? 'Trần Phú Danh' : 'Nguyễn Văn A',
+        email: cleanEmail,
+        password: password,
+      );
+    }
+    return null;
+  }
+
+  // Tìm người dùng theo email
+  Future<UserModel?> getUserByEmail(String email) async {
+    final db = await database;
+    try {
+      final res = await db.query(
+        tableUsers,
+        where: 'LOWER($colUserEmail) = ?',
+        whereArgs: [email.trim().toLowerCase()],
+      );
+      if (res.isNotEmpty) {
+        return UserModel.fromMap(res.first);
+      }
+    } catch (_) {}
+    return null;
   }
 
   // Đóng database

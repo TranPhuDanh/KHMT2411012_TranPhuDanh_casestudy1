@@ -43,16 +43,18 @@ lib/
 ├── models/
 │   ├── category_model.dart       # Model danh mục
 │   ├── transaction_model.dart    # Model giao dịch
-│   └── filter_criteria.dart      # [MỚI] Model lưu trữ tiêu chí lọc
+│   ├── filter_criteria.dart      # Model lưu trữ tiêu chí lọc
+│   └── user_model.dart           # [MỚI] Model người dùng & tài khoản
 ├── screens/
-│   ├── filter_screen.dart        # [MỚI] Màn hình Bộ lọc giao dịch
-│   ├── profile_screen.dart       # [MỚI] Màn hình Cá nhân
-│   └── statistics_screen.dart    # [MỚI] Màn hình Thống kê & DonutChart
-└── main.dart                     # Ứng dụng chính & Dashboard 4 tab
+│   ├── filter_screen.dart        # Màn hình Bộ lọc giao dịch
+│   ├── login_screen.dart         # [MỚI] Màn hình Đăng nhập & Tạo tài khoản
+│   ├── profile_screen.dart       # Màn hình Cá nhân
+│   └── statistics_screen.dart    # Màn hình Thống kê & DonutChart
+└── main.dart                     # Ứng dụng chính, Welcome & Dashboard
 test/
-├── database_test.dart            # Test CSDL SQLite CRUD (12 tests)
-├── buoi7_screens_test.dart       # [MỚI] Test 3 màn hình Buổi 7 (6 tests)
-└── widget_test.dart              # Test màn hình Welcome
+├── database_test.dart            # Test CSDL SQLite CRUD & UserModel (14 tests)
+├── buoi7_screens_test.dart       # Test 4 màn hình & Luồng xác thực (11 tests)
+└── widget_test.dart              # Test màn hình Welcome (1 test)
 ```
 
 ---
@@ -67,21 +69,33 @@ test/
 ### 3.2. Màn hình Cá nhân (`ProfileView`)
 - **Thẻ Avatar:** Đường kính 68px, màu nền `Color(0xFF93C5FD)`, icon người màu trắng 42px.
 - **Tương tác chức năng:**
+  - Hiển thị tên và email người dùng đã đăng nhập.
   - Chỉnh sửa thông tin cá nhân và cập nhật State ngay lập tức.
   - Điều chỉnh hạn mức ngân sách chi tiêu hàng tháng.
   - Xem toàn bộ danh mục động từ bảng `categories` SQLite qua `showModalBottomSheet`.
-  - Hộp thoại Đăng xuất an toàn với nút xác nhận hủy hoặc đăng xuất đưa về `WelcomeScreen`.
+  - Hộp thoại Đăng xuất an toàn với nút xác nhận hủy hoặc đăng xuất đưa về màn hình Đăng nhập / Bắt đầu.
 
 ### 3.3. Màn hình Bộ lọc (`FilterScreen`)
 - **Model `FilterCriteria`:** Đóng gói trạng thái lọc kiểu immutable, hỗ trợ `copyWith`.
 - **Đồng bộ với Dashboard:** Tích hợp nút mở bộ lọc nhanh (icon `tune_rounded`) trên Tab Giao dịch; hiển thị thanh trạng thái đang lọc kèm nút hủy lọc tiện lợi.
 
----
+### 3.4. Tối ưu hóa Màn hình Thêm & Sửa giao dịch (`AddTransactionScreen` / `EditTransactionScreen`)
+- Tách biệt rõ ràng 3 ô nhập liệu độc lập: **Tên giao dịch**, **Tiêu đề**, và **Ghi chú**.
+- Thiết kế TextField với `OutlineInputBorder`, hiển thị viền xanh `#2563EB` khi active (focus) giúp phản hồi cảm ứng và thao tác gõ phím trên thiết bị / máy ảo mượt mà, chuẩn xác.
+- Đồng bộ trường `transaction_name` xuống CSDL SQLite, đảm bảo hiển thị chi tiết tên, tiêu đề và ghi chú lên danh sách giao dịch Dashboard.
 
-4. **Tối ưu hóa Màn hình Thêm & Sửa giao dịch (`AddTransactionScreen` / `EditTransactionScreen`):**
-   - Tách biệt rõ ràng 3 ô nhập liệu độc lập: **Tên giao dịch**, **Tiêu đề**, và **Ghi chú**.
-   - Thiết kế TextField với `OutlineInputBorder`, hiển thị viền xanh `#2563EB` khi active (focus) giúp phản hồi cảm ứng và thao tác gõ phím trên thiết bị / máy ảo mượt mà, chuẩn xác.
-   - Đồng bộ trường `transaction_name` xuống CSDL SQLite, đảm bảo hiển thị chi tiết tên, tiêu đề và ghi chú lên danh sách giao dịch Dashboard.
+### 3.5. Màn hình Đăng nhập & Tạo tài khoản (`LoginScreen`)
+- **Điều hướng tự động:** Chuyển tiếp liền mạch từ nút "Bắt đầu" ở màn hình chào mừng (`WelcomeScreen`) sang màn hình Đăng nhập / Tạo tài khoản.
+- **Thanh chuyển Tab (Segmented Switch):** Chuyển đổi linh hoạt giữa form **Đăng nhập** và **Tạo tài khoản** ngay trên giao diện mà không cần reload trang.
+- **Tính năng Đăng nhập:**
+  - Nhập Email / Tên đăng nhập và Mật khẩu (có icon mắt ẩn/hiện mật khẩu).
+  - Checkbox ghi nhớ đăng nhập và hộp thoại "Quên mật khẩu?".
+  - Banner tài khoản mẫu (`nguyenvana@example.com / 123`) kèm nút "Điền" một chạm tiện lợi.
+  - Nút "Bỏ qua, vào thẳng ứng dụng" cho phép trải nghiệm nhanh dưới tư cách khách.
+- **Tính năng Tạo tài khoản:**
+  - Đăng ký đầy đủ: Họ và tên, Email, Mật khẩu, Xác nhận mật khẩu.
+  - Kiểm tra tính hợp lệ dữ liệu và lưu trữ an toàn vào bảng `users` trong CSDL SQLite.
+  - Tự động đăng nhập và đồng bộ họ tên, email lên trang Cá nhân (`ProfileView`).
 
 ---
 
@@ -90,12 +104,12 @@ test/
 1. **Phân tích tĩnh (`flutter analyze`):**
    ```text
    Analyzing test1111...
-   No issues found! (ran in 1.3s)
+   No issues found! (ran in 3.3s)
    ```
    - Đạt tiêu chuẩn sạch tuyệt đối: **0 lỗi, 0 cảnh báo, 0 lint issue**.
 
 2. **Kiểm thử tự động (`flutter test`):**
    ```text
-   00:01 +21: All tests passed!
+   00:02 +26: All tests passed!
    ```
-   - Toàn bộ **21/21 test cases** chạy thành công, bao gồm test giao diện Thống kê, Cá nhân, Bộ lọc, Thêm giao dịch, CSDL SQLite CRUD và luồng nghiệp vụ.
+   - Toàn bộ **26/26 test cases** chạy thành công, bao gồm kiểm thử Đăng nhập, Tạo tài khoản, Thống kê, Cá nhân, Bộ lọc, Thêm giao dịch, CSDL SQLite CRUD và luồng nghiệp vụ.

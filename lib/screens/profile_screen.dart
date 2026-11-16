@@ -4,17 +4,31 @@ import '../database/database_helper.dart';
 /// Màn hình Cá nhân (ProfileScreen / ProfileView) theo mockup Buổi 7
 class ProfileView extends StatefulWidget {
   final VoidCallback? onLogout;
+  final String? initialUserName;
+  final String? initialUserEmail;
 
-  const ProfileView({super.key, this.onLogout});
+  const ProfileView({
+    super.key,
+    this.onLogout,
+    this.initialUserName,
+    this.initialUserEmail,
+  });
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  String _userName = 'Nguyễn Văn A';
-  String _userEmail = 'nguyenvana@example.com';
+  late String _userName;
+  late String _userEmail;
   double _monthlyBudget = 10000000.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _userName = widget.initialUserName ?? 'Nguyễn Văn A';
+    _userEmail = widget.initialUserEmail ?? 'nguyenvana@example.com';
+  }
 
   void _showEditProfileDialog() {
     final nameCtrl = TextEditingController(text: _userName);

@@ -4,9 +4,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'database/database_helper.dart';
 import 'models/filter_criteria.dart';
 import 'models/transaction_model.dart';
+import 'models/user_model.dart';
 import 'screens/filter_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/statistics_screen.dart';
+
+export 'screens/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -148,7 +152,7 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(flex: 4),
 
-              // Nút Bắt đầu -> Chuyển sang Dashboard
+              // Nút Bắt đầu -> Chuyển sang Màn hình Đăng nhập / Tạo tài khoản
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -157,7 +161,7 @@ class WelcomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DashboardScreen(),
+                        builder: (context) => const LoginScreen(),
                       ),
                     );
                   },
@@ -242,7 +246,12 @@ Color getCategoryColor(String category) {
 // ==================== Màn hình Dashboard (Quản lý thu chi) ====================
 class DashboardScreen extends StatefulWidget {
   final int initialIndex;
-  const DashboardScreen({super.key, this.initialIndex = 0});
+  final UserModel? currentUser;
+  const DashboardScreen({
+    super.key,
+    this.initialIndex = 0,
+    this.currentUser,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -510,10 +519,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return StatisticsView(transactions: _allTransactions);
       case 3:
         return ProfileView(
+          initialUserName: widget.currentUser?.name,
+          initialUserEmail: widget.currentUser?.email,
           onLogout: () {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
               (route) => false,
             );
           },

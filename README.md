@@ -18,7 +18,7 @@
 | **Buổi 4** | `buoi4` | Xây dựng **Màn hình Dashboard Quản lý thu chi (`DashboardScreen`)** và liên kết điều hướng hoàn chỉnh giữa các màn hình. |
 | **Buổi 5** | `buoi5` | **Thiết kế và xây dựng cơ sở dữ liệu SQLite cho ứng dụng**: Mô hình hóa CSDL quan hệ (`categories`, `transactions`), xây dựng Singleton `DatabaseHelper`, thực hiện trọn vẹn CRUD, tính toán thống kê tự động và đồng bộ trực tiếp với giao diện. |
 | **Buổi 6** | `buoi6` | **Hoàn thiện các màn hình thêm, sửa và load thông tin giao dịch lên màn hình Dashboard**: Đổ dữ liệu động từ SQLite lên thẻ số dư, tóm tắt thu/chi và 5 giao dịch gần đây; hoàn thiện luồng Thêm/Sửa/Xóa giao dịch (có xác nhận); thêm tính năng tìm kiếm, bộ lọc danh mục và xóa vuốt (`Dismissible`). |
-| **Buổi 7** | `buoi7` | **Hoàn thiện màn hình Thống kê, màn hình Cá nhân và màn hình Bộ lọc**: Biểu đồ Donut Chart phân rã danh mục chi tiêu theo kỳ (Tháng này, Tháng trước, Năm nay); màn hình Cá nhân quản lý thông tin, ngân sách, danh mục và bảo mật; màn hình Bộ lọc giao dịch đa tiêu chí (loại, danh mục, thời gian, tùy chỉnh khoảng ngày). |
+| **Buổi 7** | `buoi7` | **Hoàn thiện màn hình Thống kê, màn hình Cá nhân, màn hình Bộ lọc và Màn hình Đăng nhập / Tạo tài khoản**: Biểu đồ Donut Chart phân rã danh mục chi tiêu theo kỳ (Tháng này, Tháng trước, Năm nay); màn hình Cá nhân quản lý thông tin, ngân sách, danh mục và bảo mật; màn hình Bộ lọc giao dịch đa tiêu chí; màn hình Đăng nhập & Tạo tài khoản xác thực người dùng an toàn với SQLite. |
 
 ---
 
@@ -31,7 +31,8 @@
 
 ## 💾 Kiến trúc Cơ sở dữ liệu SQLite
 - **`categories`**: Quản lý danh mục thu / chi (Ăn uống, Di chuyển, Mua sắm, Giải trí, Giáo dục, Lương, Thưởng,...).
-- **`transactions`**: Quản lý các giao dịch thu chi cá nhân (Tiêu đề, Số tiền, Danh mục, Khóa ngoại `category_id`, Ngày, Loại thu/chi, Ghi chú).
+- **`transactions`**: Quản lý các giao dịch thu chi cá nhân (Tên giao dịch, Tiêu đề, Số tiền, Danh mục, Khóa ngoại `category_id`, Ngày, Loại thu/chi, Ghi chú).
+- **`users`**: Quản lý thông tin và xác thực người dùng (Họ tên, Email, Mật khẩu, Ngày tạo).
 
 ---
 
@@ -52,4 +53,4 @@ flutter test
 # Kiểm tra phân tích cú pháp tĩnh
 flutter analyze
 ```
-- Kết quả: **`All tests passed!` (21/21 tests pass, 0 issues)**.
+- Kết quả: **`All tests passed!` (26/26 tests pass, 0 issues)**.

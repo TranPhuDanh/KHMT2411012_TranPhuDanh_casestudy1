@@ -235,5 +235,59 @@ void main() {
       expect(find.text('Lưu'), findsOneWidget);
     });
   });
+
+  group('Kiểm thử Màn hình Đăng nhập & Tạo tài khoản (LoginScreen)', () {
+    testWidgets('Hiển thị đầy đủ form Đăng nhập và các phần tử', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LoginScreen(),
+        ),
+      );
+
+      // Logo và tiêu đề
+      expect(find.text('Expense Manager'), findsOneWidget);
+      expect(find.text('Đăng nhập để theo dõi thu chi cá nhân'), findsOneWidget);
+
+      // Tabs & Nút
+      expect(find.text('Tạo tài khoản'), findsOneWidget);
+      expect(find.text('Email hoặc tên đăng nhập'), findsOneWidget);
+      expect(find.text('Mật khẩu'), findsOneWidget);
+      expect(find.text('Ghi nhớ'), findsOneWidget);
+      expect(find.text('Quên mật khẩu?'), findsOneWidget);
+      expect(find.text('Bỏ qua, vào thẳng ứng dụng'), findsOneWidget);
+    });
+
+    testWidgets('Chuyển đổi sang tab Tạo tài khoản hiển thị form Đăng ký', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LoginScreen(),
+        ),
+      );
+
+      // Nhấn tab Tạo tài khoản
+      await tester.tap(find.text('Tạo tài khoản'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Họ và tên'), findsOneWidget);
+      expect(find.text('Địa chỉ Email'), findsOneWidget);
+      expect(find.text('Xác nhận mật khẩu'), findsOneWidget);
+      expect(find.text('Đăng nhập ngay'), findsOneWidget);
+    });
+
+    testWidgets('Bấm Bắt đầu từ WelcomeScreen chuyển sang LoginScreen', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: WelcomeScreen(),
+        ),
+      );
+
+      expect(find.text('Bắt đầu'), findsOneWidget);
+      await tester.tap(find.text('Bắt đầu'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.text('Đăng nhập để theo dõi thu chi cá nhân'), findsOneWidget);
+    });
+  });
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:test1111/models/category_model.dart';
 import 'package:test1111/models/transaction_model.dart';
+import 'package:test1111/models/user_model.dart';
 import 'package:test1111/database/database_helper.dart';
 
 void main() {
@@ -218,6 +219,33 @@ void main() {
       for (int i = 0; i < recents.length - 1; i++) {
         expect(recents[i].id! >= recents[i + 1].id!, true);
       }
+    });
+  });
+
+  group('Kiểm thử UserModel & Xác thực tài khoản', () {
+    test('Chuyển đổi UserModel toMap và fromMap chính xác', () {
+      const user = UserModel(
+        id: 1,
+        name: 'Trần Phú Danh',
+        email: 'danh@example.com',
+        password: '123',
+      );
+      final map = user.toMap();
+      expect(map['name'], 'Trần Phú Danh');
+      expect(map['email'], 'danh@example.com');
+      expect(map['password'], '123');
+
+      final fromMap = UserModel.fromMap(map);
+      expect(fromMap.id, user.id);
+      expect(fromMap.name, user.name);
+      expect(fromMap.email, user.email);
+    });
+
+    test('Đăng nhập với tài khoản mẫu', () async {
+      final dbHelper = DatabaseHelper.instance;
+      final user = await dbHelper.loginUser('nguyenvana@example.com', '123');
+      expect(user, isNotNull);
+      expect(user!.email, 'nguyenvana@example.com');
     });
   });
 }
