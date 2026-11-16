@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:test1111/models/category_model.dart';
 import 'package:test1111/models/transaction_model.dart';
 import 'package:test1111/models/user_model.dart';
+import 'package:test1111/models/budget_model.dart';
 import 'package:test1111/database/database_helper.dart';
 
 void main() {
@@ -246,6 +247,103 @@ void main() {
       final user = await dbHelper.loginUser('nguyenvana@example.com', '123');
       expect(user, isNotNull);
       expect(user!.email, 'nguyenvana@example.com');
+    });
+  });
+
+  group('Kiểm thử BudgetModel & Quản lý nhiều hạn mức ngân sách', () {
+    test('Chuyển đổi BudgetModel toMap, fromMap và copyWith chính xác', () {
+      const budget = BudgetModel(
+        id: 1,
+        name: 'Ngân sách ăn uống',
+        category: 'Ăn uống',
+        limitAmount: 3000000.0,
+        period: 'Hàng tháng',
+      );
+
+      final map = budget.toMap();
+      expect(map['id'], 1);
+      expect(map['name'], 'Ngân sách ăn uống');
+      expect(map['category'], 'Ăn uống');
+      expect(map['limit_amount'], 3000000.0);
+      expect(map['period'], 'Hàng tháng');
+
+      final fromMap = BudgetModel.fromMap(map);
+      expect(fromMap.id, 1);
+      expect(fromMap.name, 'Ngân sách ăn uống');
+      expect(fromMap.category, 'Ăn uống');
+      expect(fromMap.limitAmount, 3000000.0);
+      expect(fromMap.period, 'Hàng tháng');
+
+      final copied = budget.copyWith(limitAmount: 4500000.0);
+      expect(copied.limitAmount, 4500000.0);
+      expect(copied.name, budget.name);
+    });
+
+    test('Đọc danh sách hạn mức ngân sách mặc định trong SQLite', () async {
+      final dbHelper = DatabaseHelper.instance;
+      final budgets = await dbHelper.getAllBudgets();
+
+      expect(budgets.isNotEmpty, true);
+      expect(budgets.any((b) => b.category == 'Tất cả'), true);
+      expect(budgets.any((b) => b.category == 'Ăn uống'), true);
+    });
+
+    test('Thêm hạn mức ngân sách mới vào SQLite', () async {
+      final dbHelper = DatabaseHelper.instance;
+      final initialCount = (await dbHelper.getAllBudgets()).length;
+
+      const newBudget = BudgetModel(
+        name: 'Hạn mức Du lịch hè',
+        category: 'Khác',
+        limitAmount: 5000000.0,
+        period: 'Hàng tháng',
+      );
+      final id = await dbHelper.insertBudget(newBudget);
+      expect(id, isPositive);
+
+      final afterList = await dbHelper.getAllBudgets();
+      expect(afterList.length, initialCount + 1);
+      final inserted = afterList.firstWhere((b) => b.id == id);
+      expect(inserted.name, 'Hạn mức Du lịch hè');
+      expect(inserted.limitAmount, 5000000.0);
+    });
+
+    test('Cập nhật và xóa hạn mức ngân sách trong SQLite', () async {
+      final dbHelper = DatabaseHelper.instance;
+      const budget = BudgetModel(
+        name: 'Hạn mức cần xóa',
+        category: 'Giải trí',
+        limitAmount: 1200000.0,
+        period: 'Hàng tuần',
+      );
+      final id = await dbHelper.insertBudget(budget);
+
+      // Cập nhật
+      final updatedBudget = budget.copyWith(id: id, limitAmount: 1800000.0);
+      final updateRows = await dbHelper.updateBudget(updatedBudget);
+      expect(updateRows, 1);
+
+      // Kiểm tra giá trị đã cập nhật
+      final listAfterUpdate = await dbHelper.getAllBudgets();
+      final updatedItem = listAfterUpdate.firstWhere((b) => b.id == id);
+      expect(updatedItem.limitAmount, 1800000.0);
+
+      // Xóa
+      final deleteRows = await dbHelper.deleteBudget(id);
+      expect(deleteRows, 1);
+
+      final listAfterDelete = await dbHelper.getAllBudgets();
+      expect(listAfterDelete.any((b) => b.id == id), false);
+    });
+
+    test('Tính số tiền chi tiêu thực tế theo danh mục cho hạn mức ngân sách', () async {
+      final dbHelper = DatabaseHelper.instance;
+      final spentAll = await dbHelper.getSpentForBudget('Tất cả');
+      final spentFood = await dbHelper.getSpentForBudget('Ăn uống');
+
+      expect(spentAll, isA<double>());
+      expect(spentFood, isA<double>());
+      expect(spentAll >= spentFood, true);
     });
   });
 }

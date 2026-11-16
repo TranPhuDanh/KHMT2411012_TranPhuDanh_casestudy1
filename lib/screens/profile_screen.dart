@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
+import 'budget_screen.dart';
 
 /// Màn hình Cá nhân (ProfileScreen / ProfileView) theo mockup Buổi 7
 class ProfileView extends StatefulWidget {
@@ -21,7 +22,6 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   late String _userName;
   late String _userEmail;
-  double _monthlyBudget = 10000000.0;
 
   @override
   void initState() {
@@ -77,66 +77,6 @@ class _ProfileViewState extends State<ProfileView> {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Đã cập nhật thông tin thành công!')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Lưu', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBudgetDialog() {
-    final budgetCtrl = TextEditingController(
-      text: _monthlyBudget.round().toString(),
-    );
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Cài đặt ngân sách tháng',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Đặt hạn mức chi tiêu hàng tháng để nhận cảnh báo:',
-              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: budgetCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Ngân sách (VNĐ)',
-                suffixText: 'đ',
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newBudget = double.tryParse(budgetCtrl.text.trim());
-              if (newBudget != null && newBudget > 0) {
-                setState(() => _monthlyBudget = newBudget);
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã cập nhật hạn mức ngân sách!')),
                 );
               }
             },
@@ -430,7 +370,12 @@ class _ProfileViewState extends State<ProfileView> {
           _buildMenuItem(
             icon: Icons.settings_outlined,
             title: 'Cài đặt ngân sách',
-            onTap: _showBudgetDialog,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BudgetScreen()),
+              );
+            },
           ),
           _buildMenuItem(
             icon: Icons.dns_outlined,

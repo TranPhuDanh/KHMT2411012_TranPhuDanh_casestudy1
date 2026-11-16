@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../models/budget_model.dart';
 import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 import '../models/user_model.dart';
@@ -7,6 +8,14 @@ import '../models/user_model.dart';
 class DatabaseHelper {
   static const String _dbName = 'expense_manager.db';
   static const int _dbVersion = 3;
+
+  // Bảng Hạn mức Ngân sách (Budgets)
+  static const String tableBudgets = 'budgets';
+  static const String colBudgetId = 'id';
+  static const String colBudgetName = 'name';
+  static const String colBudgetCategory = 'category';
+  static const String colBudgetLimitAmount = 'limit_amount';
+  static const String colBudgetPeriod = 'period';
 
   // Bảng Người dùng (Users)
   static const String tableUsers = 'users';
@@ -110,6 +119,29 @@ class DatabaseHelper {
           $colUserCreatedAt TEXT
         )
       ''');
+      final userCount = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM $tableUsers'),
+      ) ?? 0;
+      if (userCount == 0) {
+        await _insertSampleUsers(db);
+      }
+    } catch (_) {}
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableBudgets (
+          $colBudgetId INTEGER PRIMARY KEY AUTOINCREMENT,
+          $colBudgetName TEXT NOT NULL,
+          $colBudgetCategory TEXT NOT NULL,
+          $colBudgetLimitAmount REAL NOT NULL,
+          $colBudgetPeriod TEXT NOT NULL
+        )
+      ''');
+      final budgetCount = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM $tableBudgets'),
+      ) ?? 0;
+      if (budgetCount == 0) {
+        await _insertSampleBudgets(db);
+      }
     } catch (_) {}
   }
 
@@ -153,10 +185,22 @@ class DatabaseHelper {
       )
     ''');
 
-    // 4. Khởi tạo dữ liệu mẫu ban đầu
+    // 4. Tạo bảng Hạn mức Ngân sách (Budgets)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableBudgets (
+        $colBudgetId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $colBudgetName TEXT NOT NULL,
+        $colBudgetCategory TEXT NOT NULL,
+        $colBudgetLimitAmount REAL NOT NULL,
+        $colBudgetPeriod TEXT NOT NULL
+      )
+    ''');
+
+    // 5. Khởi tạo dữ liệu mẫu ban đầu
     await _insertSampleCategories(db);
     await _insertSampleTransactions(db);
     await _insertSampleUsers(db);
+    await _insertSampleBudgets(db);
   }
 
   // Chèn danh mục mặc định
@@ -260,6 +304,35 @@ class DatabaseHelper {
         colUserPassword: '123',
         colUserCreatedAt: DateTime.now().toIso8601String(),
       });
+    } catch (_) {}
+  }
+
+  // Chèn các hạn mức ngân sách mẫu mặc định
+  Future<void> _insertSampleBudgets(Database db) async {
+    try {
+      final sampleBudgets = [
+        {
+          colBudgetName: 'Tổng chi tiêu tháng',
+          colBudgetCategory: 'Tất cả',
+          colBudgetLimitAmount: 10000000.0,
+          colBudgetPeriod: 'Hàng tháng',
+        },
+        {
+          colBudgetName: 'Hạn mức Ăn uống',
+          colBudgetCategory: 'Ăn uống',
+          colBudgetLimitAmount: 3000000.0,
+          colBudgetPeriod: 'Hàng tháng',
+        },
+        {
+          colBudgetName: 'Hạn mức Mua sắm',
+          colBudgetCategory: 'Mua sắm',
+          colBudgetLimitAmount: 2000000.0,
+          colBudgetPeriod: 'Hàng tháng',
+        },
+      ];
+      for (final b in sampleBudgets) {
+        await db.insert(tableBudgets, b);
+      }
     } catch (_) {}
   }
 
@@ -466,6 +539,73 @@ class DatabaseHelper {
       }
     } catch (_) {}
     return null;
+  }
+
+  // ==================== CÁC PHƯƠNG THỨC QUẢN LÝ HẠN MỨC (BUDGETS) ====================
+
+  // Đọc danh sách toàn bộ các hạn mức
+  Future<List<BudgetModel>> getAllBudgets() async {
+    final db = await database;
+    try {
+      final res = await db.query(tableBudgets, orderBy: '$colBudgetId ASC');
+      if (res.isNotEmpty) {
+        return res.map((map) => BudgetModel.fromMap(map)).toList();
+      }
+    } catch (_) {}
+
+    return const [
+      BudgetModel(id: 1, name: 'Tổng chi tiêu tháng', category: 'Tất cả', limitAmount: 10000000.0),
+      BudgetModel(id: 2, name: 'Hạn mức Ăn uống', category: 'Ăn uống', limitAmount: 3000000.0),
+      BudgetModel(id: 3, name: 'Hạn mức Mua sắm', category: 'Mua sắm', limitAmount: 2000000.0),
+    ];
+  }
+
+  // Thêm một hạn mức mới
+  Future<int> insertBudget(BudgetModel budget) async {
+    final db = await database;
+    return await db.insert(tableBudgets, budget.toMap());
+  }
+
+  // Cập nhật hạn mức
+  Future<int> updateBudget(BudgetModel budget) async {
+    final db = await database;
+    return await db.update(
+      tableBudgets,
+      budget.toMap(),
+      where: '$colBudgetId = ?',
+      whereArgs: [budget.id],
+    );
+  }
+
+  // Xóa hạn mức
+  Future<int> deleteBudget(int id) async {
+    final db = await database;
+    return await db.delete(
+      tableBudgets,
+      where: '$colBudgetId = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Tính số tiền đã chi tiêu thực tế cho một hạn mức
+  Future<double> getSpentForBudget(String category) async {
+    final db = await database;
+    try {
+      if (category == 'Tất cả') {
+        final res = await db.rawQuery(
+          'SELECT SUM($colAmount) as total FROM $tableTransactions WHERE $colIsExpense = 1',
+        );
+        return (res.first['total'] as num?)?.toDouble() ?? 0.0;
+      } else {
+        final res = await db.rawQuery(
+          'SELECT SUM($colAmount) as total FROM $tableTransactions WHERE $colIsExpense = 1 AND $colCategory = ?',
+          [category],
+        );
+        return (res.first['total'] as num?)?.toDouble() ?? 0.0;
+      }
+    } catch (_) {
+      return 0.0;
+    }
   }
 
   // Đóng database

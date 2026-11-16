@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:test1111/models/filter_criteria.dart';
+import 'package:test1111/models/budget_model.dart';
 import 'package:test1111/screens/filter_screen.dart';
 import 'package:test1111/screens/profile_screen.dart';
 import 'package:test1111/screens/statistics_screen.dart';
 import 'package:test1111/main.dart';
 
 void main() {
+  setUpAll(() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
   group('Kiểm thử Màn hình Thống kê (StatisticsView) - Buổi 7', () {
     testWidgets('Hiển thị đầy đủ tiêu đề, các nút kỳ hạn và biểu đồ thống kê', (tester) async {
       await tester.pumpWidget(
@@ -287,6 +293,68 @@ void main() {
 
       expect(find.byType(LoginScreen), findsOneWidget);
       expect(find.text('Đăng nhập để theo dõi thu chi cá nhân'), findsOneWidget);
+    });
+  });
+
+  group('Kiểm thử Màn hình Quản lý Hạn mức Ngân sách (BudgetScreen) - Buổi 7', () {
+    final sampleBudgets = [
+      const BudgetModel(
+        id: 1,
+        name: 'Tổng chi tiêu hàng tháng',
+        category: 'Tất cả',
+        limitAmount: 10000000.0,
+        period: 'Hàng tháng',
+      ),
+      const BudgetModel(
+        id: 2,
+        name: 'Ăn uống thả ga',
+        category: 'Ăn uống',
+        limitAmount: 3000000.0,
+        period: 'Hàng tháng',
+      ),
+    ];
+
+    testWidgets('Hiển thị danh sách hạn mức ngân sách và nút thêm hạn mức mới', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BudgetScreen(
+            initialBudgets: sampleBudgets,
+            initialSpentMap: const {'Tất cả': 5000000.0, 'Ăn uống': 2000000.0},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Kiểm tra AppBar title
+      expect(find.text('Cài đặt hạn mức ngân sách'), findsOneWidget);
+      // Kiểm tra nút Thêm hạn mức khác
+      expect(find.text('Thêm hạn mức khác'), findsOneWidget);
+      // Kiểm tra tiêu đề danh sách
+      expect(find.text('Danh sách hạn mức đã cài đặt'), findsOneWidget);
+      // Kiểm tra có hiển thị ngân sách
+      expect(find.text('Tổng chi tiêu hàng tháng'), findsOneWidget);
+      expect(find.text('Ăn uống thả ga'), findsOneWidget);
+    });
+
+    testWidgets('Mở hộp thoại Thêm hạn mức mới khi bấm nút', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BudgetScreen(
+            initialBudgets: sampleBudgets,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Thêm hạn mức khác'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Thêm hạn mức mới'), findsOneWidget);
+      expect(find.text('Tên hạn mức'), findsOneWidget);
+      expect(find.text('Áp dụng cho danh mục'), findsOneWidget);
+      expect(find.text('Số tiền hạn mức (VNĐ)'), findsOneWidget);
+      expect(find.text('Kỳ hạn'), findsOneWidget);
+      expect(find.text('Thêm'), findsOneWidget);
     });
   });
 }

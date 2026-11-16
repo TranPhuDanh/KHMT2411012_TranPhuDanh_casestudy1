@@ -11,6 +11,7 @@ import 'screens/profile_screen.dart';
 import 'screens/statistics_screen.dart';
 
 export 'screens/login_screen.dart';
+export 'screens/budget_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1348,6 +1349,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF0F172A),
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 3),
                               Row(
@@ -1361,12 +1364,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   if (item.title.isNotEmpty && item.title != item.transactionName) ...[
                                     const SizedBox(width: 6),
-                                    Text(
-                                      '• ${item.title}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF64748B),
-                                        fontWeight: FontWeight.w500,
+                                    Flexible(
+                                      child: Text(
+                                        '• ${item.title}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF64748B),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
